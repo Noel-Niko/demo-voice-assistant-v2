@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs ls -lah)",
+      "Bash(uv run pytest tests/unit/ -v --tb=short)"
+    ]
+  }
+}
