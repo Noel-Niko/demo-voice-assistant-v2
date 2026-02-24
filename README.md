@@ -1,5 +1,5 @@
 This repo is a "production-ready" real-time transcript streaming and LLM summarization system for customer service conversations.
-It builds on the initial work done in the [demo_voice_assistant](https://github.com/Noel-Niko/demo_voice_assistant) repo.
+It builds on the initial work done in the [demo_voice_assistant](https://github.com/Noel-Niko/demo_voice_assistant) repo hich includes audio to text transcription not utilized here but portable to this project.
 
 ### PRESENTATION:  [noel_nosse_staff_swe_assessment_presentation.pptx](https://github.com/user-attachments/files/25507521/noel_nosse_staff_swe_assessment_presentation.pptx)
 
