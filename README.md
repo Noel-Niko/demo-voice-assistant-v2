@@ -6,10 +6,10 @@ _____
 ![summary](https://github.com/user-attachments/assets/6dcb3ae0-6fae-408d-8c30-c99994a4f173)
 
 _____
-![Auto_and_Manual_Suggestions](https://github.com/user-attachments/assets/f518019d-d46e-48b1-8929-3fb5eb6d3f78)
+![listening-then-manual](https://github.com/user-attachments/assets/ba0ee8bc-86d7-4ab1-b5e0-81ebfb34c5e2)
 
 _____
-![End_Of_Call](https://github.com/user-attachments/assets/0293439d-49a8-45a7-bb91-525f58838fb1)
+![end-of-call](https://github.com/user-attachments/assets/7f2d1a5f-908c-44c6-b141-b771bd85c9a2)
 
 _____
 ![dashboard_89a](https://github.com/user-attachments/assets/ff4ae04e-229d-4fe0-8ca9-b92961a40bee)
