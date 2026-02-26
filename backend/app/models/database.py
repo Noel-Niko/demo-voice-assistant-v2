@@ -12,83 +12,69 @@ import structlog
 
 logger = structlog.get_logger(__name__)
 
-# Global async engine
-_engine = None
-_async_session_maker = None
 
+def create_engine():
+    """Create async database engine.
 
-def get_engine():
-    """Get or create async database engine.
+    Should be called once during application startup.
 
     Returns:
         Async SQLAlchemy engine
     """
-    global _engine
-    if _engine is None:
-        _engine = create_async_engine(
-            settings.DATABASE_URL,
-            echo=False,  # Set to True for SQL query logging
-            poolclass=NullPool,  # SQLite doesn't support connection pooling
-        )
-        logger.info("database_engine_created", url=settings.DATABASE_URL)
-    return _engine
+    engine = create_async_engine(
+        settings.DATABASE_URL,
+        echo=False,  # Set to True for SQL query logging
+        poolclass=NullPool,  # SQLite doesn't support connection pooling
+    )
+    logger.info("database_engine_created", url=settings.DATABASE_URL)
+    return engine
 
 
-def get_session_maker():
-    """Get or create async session maker.
+def create_session_maker(engine):
+    """Create async session maker.
+
+    Should be called once during application startup.
+
+    Args:
+        engine: Async SQLAlchemy engine
 
     Returns:
         Async session maker factory
     """
-    global _async_session_maker
-    if _async_session_maker is None:
-        engine = get_engine()
-        _async_session_maker = async_sessionmaker(
-            engine,
-            class_=AsyncSession,
-            expire_on_commit=False,
-        )
-        logger.info("session_maker_created")
-    return _async_session_maker
+    session_maker = async_sessionmaker(
+        engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+    )
+    logger.info("session_maker_created")
+    return session_maker
 
 
-async def init_db() -> None:
+async def init_db(engine) -> None:
     """Initialize database by creating all tables.
 
     Should be called during application startup.
+
+    Args:
+        engine: Async SQLAlchemy engine
     """
-    engine = get_engine()
     async with engine.begin() as conn:
         # Create all tables
         await conn.run_sync(Base.metadata.create_all)
     logger.info("database_tables_created")
 
 
-async def close_db() -> None:
+async def close_db(engine) -> None:
     """Close database engine and clean up resources.
 
     Should be called during application shutdown.
+
+    Args:
+        engine: Async SQLAlchemy engine
     """
-    global _engine
-    if _engine is not None:
-        await _engine.dispose()
+    if engine is not None:
+        await engine.dispose()
         logger.info("database_engine_disposed")
-        _engine = None
 
 
-async def get_session() -> AsyncSession:
-    """Get async database session.
 
-    Yields:
-        Async database session
-
-    Example:
-        async with get_session() as session:
-            result = await session.execute(query)
-    """
-    session_maker = get_session_maker()
-    async with session_maker() as session:
-        try:
-            yield session
-        finally:
-            await session.close()

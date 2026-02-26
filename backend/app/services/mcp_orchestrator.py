@@ -454,7 +454,7 @@ Raw Search Results:
 - For each product:
   • SKU and product name
   • Brief reason why it matches the query (1 sentence)
-  • Product URL: https://www.grainger.com/product/{SKU}
+  • Product URL: https://www.example.com/product/{SKU}
 - If no products found, state this clearly and factually
 
 Example format:
@@ -462,7 +462,7 @@ Example format:
 
 • **SKU 1FYX7** - ANSELL Chemical Resistant Gloves
   Nitrile coating, excellent chemical resistance for industrial use
-  View: https://www.grainger.com/product/1FYX7
+  View: https://www.example.com/product/1FYX7
 
 Example no-results format:
 **No matching products found for this query.**

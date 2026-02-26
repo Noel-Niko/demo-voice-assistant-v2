@@ -517,18 +517,18 @@ Application requires sensitive credentials (OPENAI_API_KEY, MCP_SECRET_KEY) but 
 ```bash
 # Pull secrets from AWS Secrets Manager
 cd backend
-assume aad-mlops-prod-digitalassistantdo  # or aad-mlops-nonprod-digitalassistantdo for QA
+assume your-aws-profile  # or your-aws-nonprod-profile for QA
 make prod  # or make qa
 
 # Script pulls from:
-# - digitalassistantdomain/prod/openai_key_list → OPENAI_API_KEY
-# - digitalassistantdomain/prod/mcp-secret → MCP_SECRET_KEY
+# - your-org/prod/openai-key → OPENAI_API_KEY
+# - your-org/prod/mcp-secret → MCP_SECRET_KEY
 ```
 
 ### **Production (Kubernetes):**
 Secrets loaded from Kubernetes via ArgoCD:
 ```yaml
-# digitalassistantdomain-argo-apps/base/*/app.yaml
+# your-argo-apps/base/*/app.yaml
 envFrom:
   - secretRef:
       name: openai-key-list
@@ -571,7 +571,7 @@ prompt_manual_secret "MCP_SECRET_KEY" "MCP secret key" "MCP RAG features"
 - ✅ **Developer Friendly** - One command (`make prod`) pulls everything
 
 ### **Cons:**
-- ⚠️ Requires AWS credentials (mitigated: all Grainger devs have access)
+- ⚠️ Requires AWS credentials (mitigated: all developers have access)
 - ⚠️ Slight startup delay (AWS API roundtrip ~1-2s)
 
 **Implementation:**
@@ -598,8 +598,8 @@ uvicorn app.main:app --reload
 **Secrets Mapping:**
 | Secret | AWS Path (Prod) | AWS Path (QA) | Usage |
 |--------|----------------|---------------|-------|
-| OPENAI_API_KEY | `digitalassistantdomain/prod/openai_key_list` → `OPENAI_CSCDA_NONPROD_API` | `digitalassistantdomain/qa/openai_key_list` → `OPENAI_CSCDA_NONPROD_API` | AI features (summaries, ACW) |
-| MCP_SECRET_KEY | `digitalassistantdomain/prod/mcp-secret` | `digitalassistantdomain/qa/mcp-secret` | MCP JWT authentication |
+| OPENAI_API_KEY | `your-org/prod/openai-key` → `OPENAI_API_KEY` | `your-org/qa/openai-key` → `OPENAI_API_KEY` | AI features (summaries, ACW) |
+| MCP_SECRET_KEY | `your-org/prod/mcp-secret` | `your-org/qa/mcp-secret` | MCP JWT authentication |
 
 **Security Improvements:**
 1. ✅ Removed real OpenAI key from `backend/.env`
@@ -609,9 +609,9 @@ uvicorn app.main:app --reload
 5. ✅ DRY pattern (reusable prompt function)
 
 **Pattern Reference:**
-Follows same pattern as `grainger-chat-v2`:
-- `/Users/xnxn040/PycharmProjects/grainger-chat-v2/env_utils/load_qa_env_vars.sh`
-- `/Users/xnxn040/PycharmProjects/grainger-chat-v2/Makefile`
+Follows same pattern as `internal-project`:
+- `internal-project/env_utils/load_qa_env_vars.sh`
+- `internal-project/Makefile`
 
 **Alternatives Considered:**
 
@@ -817,7 +817,7 @@ Transcript Stream → Opportunity Detector (Lightweight LLM) → Auto-Query Trig
 │ ┌─────────────────────────────────┐ │
 │ │ Products Mentioned:             │ │
 │ │ • SKU 1FYX7 - ANSELL Gloves     │ │ ← Fade in
-│ │   $45.99 | grainger.com/1FYX7   │ │
+│ │   $45.99 | example.com/product-123   │ │
 │ └─────────────────────────────────┘ │
 │ ┌─────────────────────────────────┐ │
 │ │ Orders Discussed:               │ │
@@ -864,7 +864,7 @@ Transcript Stream → Opportunity Detector (Lightweight LLM) → Auto-Query Trig
 - localStorage persistence (`mcp_listening_mode`)
 - Default: OFF (Manual Mode)
 - Green banner with info message when ON
-- Smooth animations and Grainger design token styling
+- Smooth animations and design token styling
 
 🚧 **Phase 7.1-7.3 Pending - Auto-Query Backend:**
 - Opportunity detector (LLM-based)
@@ -2754,12 +2754,12 @@ Two bugs identified and fixed during the port:
 
 **Attribution**:
 
-The spaCy semantic analysis pattern, 3-layer utterance architecture (heuristics → domain rules → NLP), and the "only delays, never accelerates" invariant were originally designed and implemented by **noel.noisse@grainger.com** in the `demo_voice_assistant` project. This ADR ports that proven pattern into the assessment codebase with adaptations for the transcript analysis domain.
+The spaCy semantic analysis pattern, 3-layer utterance architecture (heuristics → domain rules → NLP), and the "only delays, never accelerates" invariant were originally designed and implemented by the original author in the `demo_voice_assistant` project. This ADR ports that proven pattern into this project with adaptations for the transcript analysis domain.
 
 **Reference Implementation**:
 
-- `demo_voice_assistant/src/gateway/semantic_checker.py` — SpacySemanticChecker source (noel.noisse@grainger.com)
-- `demo_voice_assistant/src/gateway/utterance_boundary_decider.py` — 3-layer integration pattern (noel.noisse@grainger.com)
+- `demo_voice_assistant/src/gateway/semantic_checker.py` — SpacySemanticChecker source
+- `demo_voice_assistant/src/gateway/utterance_boundary_decider.py` — 3-layer integration pattern
 - `demo_voice_assistant/src/constants/common_constants.py` — UtteranceNLP constants
 
 **Latency Benchmarks** (measured from `demo_voice_assistant` production):
@@ -2784,16 +2784,16 @@ Quick checks resolve ~80% of utterances without invoking spaCy's parser. The rem
 
 **Context**:
 
-ADR-009 selected gpt-3.5-turbo for cost reasons. While OpenAI has released newer models with improved structured output compliance, real-world testing in this agent-assist application revealed that **latency is the dominant factor** for real-time UX. gpt-4.1-mini and gpt-5 produced noticeably slower responses that degraded the agent experience. gpt-4o is acceptable but slower than preferred. gpt-3.5-turbo remains the best choice for production due to its speed. Benchmark research was conducted by **noel.nosse@grainger.com** using a structured evaluation framework stored in Databricks Unity Catalog:
+ADR-009 selected gpt-3.5-turbo for cost reasons. While OpenAI has released newer models with improved structured output compliance, real-world testing in this agent-assist application revealed that **latency is the dominant factor** for real-time UX. gpt-4.1-mini and gpt-5 produced noticeably slower responses that degraded the agent experience. gpt-4o is acceptable but slower than preferred. gpt-3.5-turbo remains the best choice for production due to its speed. Benchmark research was conducted by the original author using a structured evaluation framework stored in Databricks Unity Catalog:
 
 **Benchmark Data Source** (Databricks Unity Catalog):
 
 | Table | Schema | Description |
 |-------|--------|-------------|
-| `llm_eval_latency_stats` | `ctlg_domain_dev_bronze.schm_product` | Latency benchmarks across 5 models × 5 benchmarks × multiple thinking levels. Measures avg, median, p90, p95, p99 latency (ms) per model/benchmark combination. |
-| `llm_eval_structured_stats` | `ctlg_domain_dev_bronze.schm_product` | Structured output compliance rates: parse success, compliance scores, reliability grades (A+ through F) per model/thinking level/benchmark. Tests whether models reliably produce valid JSON matching expected schemas. |
+| `llm_eval_latency_stats` | `your_catalog.your_schema` | Latency benchmarks across 5 models × 5 benchmarks × multiple thinking levels. Measures avg, median, p90, p95, p99 latency (ms) per model/benchmark combination. |
+| `llm_eval_structured_stats` | `your_catalog.your_schema` | Structured output compliance rates: parse success, compliance scores, reliability grades (A+ through F) per model/thinking level/benchmark. Tests whether models reliably produce valid JSON matching expected schemas. |
 
-**Catalog Explorer URL**: `https://grainger-gtg-mlops-dev-use1-dbx-shared-ws.cloud.databricks.com/explore/data/ctlg_domain_dev_bronze/schm_product` (filter by `llm_` prefix)
+**Catalog Explorer URL**: `https://your-databricks-workspace.cloud.databricks.com/explore/data/your_catalog/your_schema` (filter by `llm_` prefix)
 
 **Benchmark Results Summary**:
 
@@ -2922,7 +2922,7 @@ The existing `AIInteraction` table already records `model_name` and `latency_ms`
 
 **Research Attribution**:
 
-The benchmark evaluation framework, latency analysis, and structured output compliance grading were designed and executed by **noel.nosse@grainger.com** using the Databricks evaluation pipeline. Results are stored in Unity Catalog at `ctlg_domain_dev_bronze.schm_product.llm_eval_latency_stats` and `ctlg_domain_dev_bronze.schm_product.llm_eval_structured_stats`.
+The benchmark evaluation framework, latency analysis, and structured output compliance grading were designed and executed by the original author using the Databricks evaluation pipeline. Results are stored in Unity Catalog at `your_catalog.your_schema.llm_eval_latency_stats` and `your_catalog.your_schema.llm_eval_structured_stats`.
 
 ---
 

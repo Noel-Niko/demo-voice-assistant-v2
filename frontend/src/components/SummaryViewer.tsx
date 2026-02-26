@@ -10,7 +10,7 @@
 
 import { useState, useEffect } from 'react';
 import { Summary } from '@/types/conversation';
-import { colors, spacing, typography, borderRadius, shadows } from '@/styles/grainger-tokens';
+import { colors, spacing, typography, borderRadius, shadows } from '@/styles/design-tokens';
 import StructuredSummary from '@/components/StructuredSummary';
 
 interface SummaryViewerProps {

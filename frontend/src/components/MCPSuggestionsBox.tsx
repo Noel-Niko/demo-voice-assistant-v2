@@ -5,13 +5,13 @@
  * Uses RAG (Retrieval-Augmented Generation) to provide contextual suggestions
  * for product information, order status, and knowledge base articles.
  *
- * Integration: grainger-mcp-servers.svc.ue2.prod.mlops.prod.aws.grainger.com
+ * Integration: Connects to any MCP-compatible server via MCP_INGRESS_URL
  */
 
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { colors, spacing, typography, borderRadius, shadows } from '@/styles/grainger-tokens';
+import { colors, spacing, typography, borderRadius, shadows } from '@/styles/design-tokens';
 
 interface MCPSuggestion {
   title: string;
@@ -40,6 +40,7 @@ export default function MCPSuggestionsBox({
   const [toolUsed, setToolUsed] = useState<string | null>(null);
   const [progressMessages, setProgressMessages] = useState<string[]>([]);
   const [listeningMode, setListeningMode] = useState(false);
+  const [listeningModeAvailable, setListeningModeAvailable] = useState<boolean | null>(null);
   const [isTogglingListeningMode, setIsTogglingListeningMode] = useState(false);
   const [isAutoQuery, setIsAutoQuery] = useState(false);
   const [interactionId, setInteractionId] = useState<number | null>(null);
@@ -58,9 +59,10 @@ export default function MCPSuggestionsBox({
 
         if (response.ok) {
           const data = await response.json();
+          setListeningModeAvailable(data.available);
           setListeningMode(data.is_active);
           localStorage.setItem('mcp_listening_mode', String(data.is_active));
-          console.log('[MCPSuggestionsBox] Initialized listening mode status:', data.is_active);
+          console.log('[MCPSuggestionsBox] Listening mode available:', data.available, 'active:', data.is_active);
         }
       } catch (err) {
         console.error('[MCPSuggestionsBox] Failed to fetch listening mode status:', err);
@@ -342,31 +344,37 @@ export default function MCPSuggestionsBox({
           <span style={styles.expandIcon}>{isExpanded ? '▼' : '▶'}</span>
         </div>
 
-        {/* Listening Mode Toggle */}
+        {/* Listening Mode Toggle or MCP Not Configured Message */}
         <div style={styles.toggleContainer} onClick={(e) => e.stopPropagation()}>
-          <label style={{
-            ...styles.toggleLabel,
-            opacity: isTogglingListeningMode ? 0.6 : 1,
-            cursor: isTogglingListeningMode ? 'not-allowed' : 'pointer',
-          }}>
-            <input
-              type="checkbox"
-              checked={listeningMode}
-              onChange={handleToggleListeningMode}
-              disabled={isTogglingListeningMode}
-              style={styles.toggleCheckbox}
-            />
-            <span style={styles.toggleSwitch(listeningMode)}>
-              <span style={styles.toggleSlider(listeningMode)}></span>
+          {listeningModeAvailable === false ? (
+            <span style={styles.mcpNotConfiguredText}>
+              Connect an MCP server to enable listening mode
             </span>
-            <span style={styles.toggleText}>
-              {isTogglingListeningMode
-                ? '⏳ Updating...'
-                : listeningMode
-                ? '🎧 Listening'
-                : 'Manual Mode'}
-            </span>
-          </label>
+          ) : (
+            <label style={{
+              ...styles.toggleLabel,
+              opacity: isTogglingListeningMode ? 0.6 : 1,
+              cursor: isTogglingListeningMode ? 'not-allowed' : 'pointer',
+            }}>
+              <input
+                type="checkbox"
+                checked={listeningMode}
+                onChange={handleToggleListeningMode}
+                disabled={isTogglingListeningMode}
+                style={styles.toggleCheckbox}
+              />
+              <span style={styles.toggleSwitch(listeningMode)}>
+                <span style={styles.toggleSlider(listeningMode)}></span>
+              </span>
+              <span style={styles.toggleText}>
+                {isTogglingListeningMode
+                  ? '⏳ Updating...'
+                  : listeningMode
+                  ? '🎧 Listening'
+                  : 'Manual Mode'}
+              </span>
+            </label>
+          )}
         </div>
       </div>
 
@@ -774,6 +782,12 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: spacing.sm,
+  },
+  mcpNotConfiguredText: {
+    fontSize: typography.fontSize.xs,
+    color: colors.textLight,
+    fontStyle: 'italic' as const,
+    whiteSpace: 'nowrap' as const,
   },
   toggleLabel: {
     display: 'flex',

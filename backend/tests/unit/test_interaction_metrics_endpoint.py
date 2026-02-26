@@ -9,7 +9,7 @@ from uuid import uuid4
 from httpx import AsyncClient, ASGITransport
 
 from app.main import app
-from app.models.database import init_db, get_session_maker
+from app.models.database import create_engine, create_session_maker, init_db
 from app.models.domain import AgentInteraction, Conversation
 from app.repositories.conversation_repository import ConversationRepository
 
@@ -17,10 +17,11 @@ from app.repositories.conversation_repository import ConversationRepository
 @pytest_asyncio.fixture
 async def test_app():
     """Create test application with initialized database."""
-    await init_db()
+    engine = create_engine()
+    await init_db(engine)
 
     # Initialize repository and add to app state
-    session_maker = get_session_maker()
+    session_maker = create_session_maker(engine)
     repository = ConversationRepository(session_maker)
     app.state.repository = repository
 
@@ -37,7 +38,7 @@ async def test_interaction_metrics_counts_ratings_from_user_rating_field(test_ap
     """
     from sqlalchemy import select
 
-    session_maker = get_session_maker()
+    session_maker = test_app.state.repository.session_maker
 
     # Create test conversation
     conversation_id = uuid4()
@@ -127,7 +128,7 @@ async def test_interaction_metrics_ignores_null_ratings(test_app):
     """
     from sqlalchemy import select
 
-    session_maker = get_session_maker()
+    session_maker = test_app.state.repository.session_maker
 
     # Create test conversation
     conversation_id = uuid4()

@@ -1368,8 +1368,9 @@ async def get_listening_mode_status(
     try:
         # Check if listening mode manager is available
         if listening_mode_manager is None:
-            # Return inactive status if feature disabled
+            # Return unavailable status if feature disabled (no MCP configured)
             return ListeningModeStatusResponse(
+                available=False,
                 is_active=False,
                 session_id=None,
                 conversation_id=str(conversation_id),
@@ -1386,6 +1387,7 @@ async def get_listening_mode_status(
         if not session:
             # No active session
             return ListeningModeStatusResponse(
+                available=True,
                 is_active=False,
                 session_id=None,
                 conversation_id=str(conversation_id),
@@ -1408,6 +1410,7 @@ async def get_listening_mode_status(
         )
 
         return ListeningModeStatusResponse(
+            available=True,
             is_active=True,
             session_id=session.id,
             conversation_id=str(conversation_id),

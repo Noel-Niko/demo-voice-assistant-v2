@@ -45,7 +45,7 @@ ACW PHASE:
 
 4. **The `maxWidth` on the panel container increases from `1400px` to `1600px`** to accommodate the 3-column layout. The header and footer `maxWidth` also update to match.
 
-5. **All styles use inline style objects** (not CSS modules or Tailwind). This matches the existing codebase convention. Use the design tokens from `@/styles/grainger-tokens.ts` for all values.
+5. **All styles use inline style objects** (not CSS modules or Tailwind). This matches the existing codebase convention. Use the design tokens from `@/styles/design-tokens.ts` for all values.
 
 ---
 
@@ -64,7 +64,7 @@ Before starting, read and understand these existing files:
 | `frontend/src/hooks/useTranscriptStream.ts` | Word-by-word transcript stream hook |
 | `frontend/src/types/conversation.ts` | API response types |
 | `frontend/src/types/websocket.ts` | WebSocket event types |
-| `frontend/src/styles/grainger-tokens.ts` | Design system tokens |
+| `frontend/src/styles/design-tokens.ts` | Design system tokens |
 | `code_examples/acw-summary-panel.jsx` | Reference ACW panel (mock data, full UI) |
 
 ---
@@ -151,7 +151,7 @@ This component renders caller identification in the left panel. It appears in bo
  */
 
 import { CallerInfo } from '@/types/conversation';
-import { colors, spacing, typography, borderRadius, shadows } from '@/styles/grainger-tokens';
+import { colors, spacing, typography, borderRadius, shadows } from '@/styles/design-tokens';
 
 interface CallerInfoCardProps {
   caller: CallerInfo;
@@ -283,7 +283,7 @@ Displays call metadata. Only visible during the active call phase; hidden during
  */
 
 import { CallMeta } from '@/types/conversation';
-import { colors, spacing, typography, borderRadius, shadows } from '@/styles/grainger-tokens';
+import { colors, spacing, typography, borderRadius, shadows } from '@/styles/design-tokens';
 
 interface CallMetaCardProps {
   meta: CallMeta;
@@ -376,7 +376,7 @@ Shows past interactions for the customer. Only visible during active call phase.
 
 import { useState } from 'react';
 import { InteractionHistoryItem } from '@/types/conversation';
-import { colors, spacing, typography, borderRadius, shadows } from '@/styles/grainger-tokens';
+import { colors, spacing, typography, borderRadius, shadows } from '@/styles/design-tokens';
 
 interface InteractionHistoryProps {
   history: InteractionHistoryItem[];
@@ -505,7 +505,7 @@ This is the main ACW component that replaces the right panel content when the ca
 
 Use `code_examples/acw-summary-panel.jsx` as your visual/behavioral reference. The key differences from the reference:
 
-1. **Use the existing design tokens** from `@/styles/grainger-tokens.ts` instead of inline `C` constants
+1. **Use the existing design tokens** from `@/styles/design-tokens.ts` instead of inline `C` constants
 2. **Accept real data via props** instead of hardcoded mock data
 3. **Use TypeScript** with the types from Step 1
 4. **Consume the final summary and checklist state** from the active-call phase as inputs
@@ -535,7 +535,7 @@ import {
   CRMField,
   ACWState,
 } from '@/types/conversation';
-import { colors, spacing, typography, borderRadius, shadows } from '@/styles/grainger-tokens';
+import { colors, spacing, typography, borderRadius, shadows } from '@/styles/design-tokens';
 
 interface ACWPanelProps {
   /** The final completed summary from the active-call SummaryViewer */
@@ -1387,7 +1387,7 @@ import {
   InteractionHistoryItem,
   ACWState,
 } from '@/types/conversation';
-import { colors, spacing, typography } from '@/styles/grainger-tokens';
+import { colors, spacing, typography } from '@/styles/design-tokens';
 
 // ── Hardcoded demo data ─────────────────────────────────────────
 // PLACEHOLDER: In production, CallerInfo comes from a screen-pop API
@@ -1854,7 +1854,7 @@ Fix any TypeScript errors. Common issues to watch for:
 - `SummaryViewer.tsx` — unchanged
 - `MCPSuggestionsBox.tsx` — unchanged
 - `ConnectionStatus.tsx` — unchanged
-- `grainger-tokens.ts` — unchanged
+- `design-tokens.ts` — unchanged
 
 ---
 

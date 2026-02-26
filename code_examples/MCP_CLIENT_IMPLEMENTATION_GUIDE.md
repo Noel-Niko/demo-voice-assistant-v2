@@ -16,7 +16,7 @@
 
 ## Overview
 
-This guide shows how to integrate with an MCP server (grainger-mcp-servers) that uses JWT authentication and JSON-RPC 2.0 protocol. The implementation follows 12-Factor App principles and enterprise patterns.
+This guide shows how to integrate with an MCP server that uses JWT authentication and JSON-RPC 2.0 protocol. The implementation follows 12-Factor App principles and enterprise patterns.
 
 **Key Features:**
 - JWT token generation with automatic background refresh
@@ -28,8 +28,8 @@ This guide shows how to integrate with an MCP server (grainger-mcp-servers) that
 - Auto-retry on 401 errors
 
 **MCP Server Details:**
-- Production URL: `https://grainger-mcp-servers.svc.ue2.prod.mlops.prod.aws.grainger.com`
-- QA URL: `https://grainger-mcp-servers.svc.ue2.qa.mlops.nonprod.aws.grainger.com`
+- Production URL: `https://your-mcp-server.example.com`
+- QA URL: `https://your-mcp-server-qa.example.com`
 - Protocol: JSON-RPC 2.0 over HTTPS
 - Authentication: JWT Bearer token
 - Response Format: Server-Sent Events (SSE) - must be parsed to JSON
@@ -73,9 +73,9 @@ The MCP server uses a specific URL structure and discovery mechanism:
 **IMPORTANT:** Server paths already include the leading slash (e.g., `/product_retrieval`)
 
 **Examples:**
-- ✅ `https://grainger-mcp-servers.svc.ue2.prod.mlops.prod.aws.grainger.com/product_retrieval/mcp`
-- ✅ `https://grainger-mcp-servers.svc.ue2.prod.mlops.prod.aws.grainger.com/semantic_search/mcp`
-- ❌ `https://grainger-mcp-servers.svc.ue2.prod.mlops.prod.aws.grainger.com/servers/product_retrieval/call`
+- ✅ `https://your-mcp-server.example.com/product_retrieval/mcp`
+- ✅ `https://your-mcp-server.example.com/semantic_search/mcp`
+- ❌ `https://your-mcp-server.example.com/servers/product_retrieval/call`
 
 ### Available Servers (Dynamically Discovered)
 
@@ -166,8 +166,8 @@ The implementation consists of 4 main components:
 
 ### AWS Secrets
 You need access to these AWS Secrets Manager secrets:
-- Production: `digitalassistantdomain/prod/mcp-secret`
-- QA: `digitalassistantdomain/qa/mcp-secret`
+- Production: `your-org/prod/mcp-secret`
+- QA: `your-org/qa/mcp-secret`
 
 **Secret Structure:**
 ```json
@@ -200,7 +200,7 @@ dependencies = [
 
 **File:** `app/core/config.py`
 
-**Reference Implementation:** `/Users/xnxn040/PycharmProjects/voice-seiv-be-interview-prep/backend/app/core/config.py`
+**Reference Implementation:** `your-project/backend/app/core/config.py`
 
 ```python
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -217,12 +217,12 @@ class Settings(BaseSettings):
 
     # MCP Server Configuration (12-Factor: Config from environment)
     # Note: MCP_SECRET_KEY comes from environment variables
-    # - Local: Loaded via 'source setup_mcp_env.sh' or 'make prod/qa'
+    # - Local: Loaded via 'source setup_mcp_env.sh' or 'make run'
     # - Production: Loaded from Kubernetes secrets (ArgoCD)
     MCP_SECRET_KEY: str | None = None  # JWT signing key (required at runtime)
     MCP_SECRET_ALGORITHM: str = "HS256"  # JWT algorithm
     MCP_ENVIRONMENT: str = "prod"  # or "qa"
-    MCP_INGRESS_URL: str = "https://grainger-mcp-servers.svc.ue2.prod.mlops.prod.aws.grainger.com"
+    MCP_INGRESS_URL: str = "https://your-mcp-server.example.com"
     MCP_DISCOVER_TOOLS_ON_STARTUP: bool = True
     MCP_REQUEST_TIMEOUT: float = 30.0
 
@@ -244,7 +244,7 @@ settings = Settings()
 
 **File:** `app/services/mcp_token_manager.py`
 
-**Reference Implementation:** `/Users/xnxn040/PycharmProjects/voice-seiv-be-interview-prep/backend/app/services/mcp_token_manager.py`
+**Reference Implementation:** `your-project/backend/app/services/mcp_token_manager.py`
 
 **Key Features:**
 - Thread-safe token generation using `threading.Lock`
@@ -303,7 +303,7 @@ class MCPTokenManager:
 
 **File:** `app/services/mcp_client.py`
 
-**Reference Implementation:** `/Users/xnxn040/PycharmProjects/voice-seiv-be-interview-prep/backend/app/services/mcp_client.py`
+**Reference Implementation:** `your-project/backend/app/services/mcp_client.py`
 
 **Key Features:**
 - JSON-RPC 2.0 protocol implementation
@@ -559,7 +559,7 @@ class MCPClient:
 
 **File:** `setup_mcp_env.sh`
 
-**Reference Implementation:** `/Users/xnxn040/PycharmProjects/voice-seiv-be-interview-prep/backend/setup_mcp_env.sh`
+**Reference Implementation:** `your-project/backend/setup_mcp_env.sh`
 
 ```bash
 #!/usr/bin/env bash
@@ -568,28 +568,17 @@ class MCPClient:
 # Fetches MCP secrets from AWS Secrets Manager and exports them to environment
 #
 # Usage:
-#   source setup_mcp_env.sh prod
-#   source setup_mcp_env.sh qa
+#   source setup_mcp_env.sh
 #
 
 set -e
 
 ENVIRONMENT="${1:-prod}"
 
-if [[ "$ENVIRONMENT" != "prod" && "$ENVIRONMENT" != "qa" ]]; then
-    echo "❌ Error: Environment must be 'prod' or 'qa'"
-    echo "Usage: source setup_mcp_env.sh [prod|qa]"
-    return 1 2>/dev/null || exit 1
-fi
+echo "Loading MCP environment variables for: $ENVIRONMENT"
 
-echo "🔐 Loading MCP environment variables for: $ENVIRONMENT"
-
-# Secret names
-if [[ "$ENVIRONMENT" == "prod" ]]; then
-    SECRET_NAME="digitalassistantdomain/prod/mcp-secret"
-else
-    SECRET_NAME="digitalassistantdomain/qa/mcp-secret"
-fi
+# Secret name (customize for your organization)
+SECRET_NAME="your-org/${ENVIRONMENT}/mcp-secret"
 
 # Check AWS credentials
 if ! aws sts get-caller-identity >/dev/null 2>&1; then
@@ -600,16 +589,11 @@ if ! aws sts get-caller-identity >/dev/null 2>&1; then
     echo ""
     echo "❌ No valid AWS credentials found!"
     echo ""
-    echo "🔧 You MUST run the following commands first:"
+    echo "You MUST configure AWS credentials first:"
     echo ""
-    echo "   1. assume"
+    echo "   1. Run: assume (or aws sso login)"
     echo ""
-    echo "   2. Select the appropriate profile:"
-    if [[ "$ENVIRONMENT" == "prod" ]]; then
-        echo "      • aad-mlops-prod-digitalassistantdo"
-    else
-        echo "      • aad-mlops-nonprod-digitalassistantdo"
-    fi
+    echo "   2. Select the appropriate AWS profile for your environment"
     echo ""
     echo "   3. Then source this script again:"
     echo "      source setup_mcp_env.sh $ENVIRONMENT"
@@ -663,7 +647,7 @@ echo ""
 
 **File:** `app/main.py`
 
-**Reference Implementation:** `/Users/xnxn040/PycharmProjects/voice-seiv-be-interview-prep/backend/app/main.py`
+**Reference Implementation:** `your-project/backend/app/main.py`
 
 ```python
 import asyncio
@@ -689,7 +673,7 @@ async def create_mcp_client() -> Tuple[MCPClient, asyncio.Task]:
 
     Following 12-Factor principles (Config):
     - Reads secrets from environment variables
-    - Local: Loaded via 'source setup_mcp_env.sh' or 'make prod/qa'
+    - Local: Loaded via 'source setup_mcp_env.sh' or 'make run'
     - Production: Loaded from Kubernetes secrets (ArgoCD)
 
     Returns:
@@ -704,7 +688,7 @@ async def create_mcp_client() -> Tuple[MCPClient, asyncio.Task]:
     if not settings.MCP_SECRET_KEY:
         error_msg = (
             "MCP_SECRET_KEY not found in environment!\n\n"
-            "Local development: Run 'source setup_mcp_env.sh prod' or 'make prod'\n"
+            "Local development: Run 'source setup_mcp_env.sh' or 'make run'\n"
             "Production: Ensure Kubernetes secrets are mounted"
         )
         logger.error(error_msg)
@@ -897,27 +881,19 @@ async def call_mcp_tool(
 
 **File:** `Makefile`
 
-**Reference Implementation:** `/Users/xnxn040/PycharmProjects/voice-seiv-be-interview-prep/Makefile`
+**Reference Implementation:** `your-project/Makefile`
 
 ```makefile
-.PHONY: prod qa help
+.PHONY: run help
 
 help:  ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-prod:  ## Load production MCP secrets and start server (requires AWS assume)
-	@echo "🚀 Starting Application (PRODUCTION secrets)"
-	@echo "Loading secrets from: digitalassistantdomain/prod/mcp-secret"
+run:  ## Load MCP secrets and start server (requires AWS assume)
+	@echo "Starting Application"
 	@echo "Server will be available at: http://localhost:8888"
 	@echo ""
-	@bash -c "source setup_mcp_env.sh prod && uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8888"
-
-qa:  ## Load QA MCP secrets and start server (requires AWS assume)
-	@echo "🚀 Starting Application (QA secrets)"
-	@echo "Loading secrets from: digitalassistantdomain/qa/mcp-secret"
-	@echo "Server will be available at: http://localhost:8888"
-	@echo ""
-	@bash -c "source setup_mcp_env.sh qa && uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8888"
+	@bash -c "source setup_mcp_env.sh && uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8888"
 ```
 
 ---
@@ -926,7 +902,7 @@ qa:  ## Load QA MCP secrets and start server (requires AWS assume)
 
 **File:** `.env.example`
 
-**Reference Implementation:** `/Users/xnxn040/PycharmProjects/voice-seiv-be-interview-prep/backend/.env.example`
+**Reference Implementation:** `your-project/backend/.env.example`
 
 ```bash
 # MCP Server Configuration
@@ -934,10 +910,8 @@ qa:  ## Load QA MCP secrets and start server (requires AWS assume)
 #
 # Local Development:
 #   1. Run 'assume' command to get AWS credentials
-#   2. Select profile:
-#      - aad-mlops-prod-digitalassistantdo (for production)
-#      - aad-mlops-nonprod-digitalassistantdo (for qa)
-#   3. Load secrets: source setup_mcp_env.sh prod (or: make prod)
+#   2. Select the appropriate AWS profile for your environment
+#   3. Load secrets: source setup_mcp_env.sh (or: make run)
 #   4. Start the service: uv run uvicorn app.main:app --reload
 #
 # Production Deployment:
@@ -946,7 +920,7 @@ qa:  ## Load QA MCP secrets and start server (requires AWS assume)
 #
 # Note: MCP_SECRET_KEY is REQUIRED and cannot be set here (loaded via setup script)
 MCP_ENVIRONMENT=prod
-MCP_INGRESS_URL=https://grainger-mcp-servers.svc.ue2.prod.mlops.prod.aws.grainger.com
+MCP_INGRESS_URL=https://your-mcp-server.example.com
 MCP_DISCOVER_TOOLS_ON_STARTUP=true
 MCP_REQUEST_TIMEOUT=30.0
 
@@ -961,28 +935,28 @@ AWS_REGION=us-east-2
 All implementation files are available in this repository:
 
 ### Core Implementation Files
-- **Configuration:** `/Users/xnxn040/PycharmProjects/voice-seiv-be-interview-prep/backend/app/core/config.py`
-- **Token Manager:** `/Users/xnxn040/PycharmProjects/voice-seiv-be-interview-prep/backend/app/services/mcp_token_manager.py`
-- **MCP Client:** `/Users/xnxn040/PycharmProjects/voice-seiv-be-interview-prep/backend/app/services/mcp_client.py`
-- **FastAPI Integration:** `/Users/xnxn040/PycharmProjects/voice-seiv-be-interview-prep/backend/app/main.py`
+- **Configuration:** `your-project/backend/app/core/config.py`
+- **Token Manager:** `your-project/backend/app/services/mcp_token_manager.py`
+- **MCP Client:** `your-project/backend/app/services/mcp_client.py`
+- **FastAPI Integration:** `your-project/backend/app/main.py`
 
 ### Setup Scripts
-- **Setup Script:** `/Users/xnxn040/PycharmProjects/voice-seiv-be-interview-prep/backend/setup_mcp_env.sh`
-- **Makefile (Backend):** `/Users/xnxn040/PycharmProjects/voice-seiv-be-interview-prep/backend/Makefile`
-- **Makefile (Root):** `/Users/xnxn040/PycharmProjects/voice-seiv-be-interview-prep/Makefile`
-- **.env.example:** `/Users/xnxn040/PycharmProjects/voice-seiv-be-interview-prep/backend/.env.example`
+- **Setup Script:** `your-project/backend/setup_mcp_env.sh`
+- **Makefile (Backend):** `your-project/backend/Makefile`
+- **Makefile (Root):** `your-project/Makefile`
+- **.env.example:** `your-project/backend/.env.example`
 
 ### Test Files
-- **Token Manager Tests:** `/Users/xnxn040/PycharmProjects/voice-seiv-be-interview-prep/backend/tests/unit/test_mcp_token_manager.py`
-- **MCP Client Tests:** `/Users/xnxn040/PycharmProjects/voice-seiv-be-interview-prep/backend/tests/unit/test_mcp_client.py`
-- **Lifespan Tests:** `/Users/xnxn040/PycharmProjects/voice-seiv-be-interview-prep/backend/tests/unit/test_mcp_lifespan.py`
+- **Token Manager Tests:** `your-project/backend/tests/unit/test_mcp_token_manager.py`
+- **MCP Client Tests:** `your-project/backend/tests/unit/test_mcp_client.py`
+- **Lifespan Tests:** `your-project/backend/tests/unit/test_mcp_lifespan.py`
 
 ### Supporting Files
-- **AWS Credential Validator:** `/Users/xnxn040/PycharmProjects/voice-seiv-be-interview-prep/backend/app/services/aws_credential_validator.py`
-- **MCP Credentials Manager:** `/Users/xnxn040/PycharmProjects/voice-seiv-be-interview-prep/backend/app/services/mcp_credentials.py`
+- **AWS Credential Validator:** `your-project/backend/app/services/aws_credential_validator.py`
+- **MCP Credentials Manager:** `your-project/backend/app/services/mcp_credentials.py`
 
 ### Documentation
-- **Implementation Plan:** `/Users/xnxn040/PycharmProjects/voice-seiv-be-interview-prep/docs/MCP_INTEGRATION_PLAN.md`
+- **Implementation Plan:** `your-project/docs/MCP_INTEGRATION_PLAN.md`
 
 ---
 
@@ -1096,15 +1070,15 @@ uv run pytest tests/unit/test_mcp_client.py -v
 **Prerequisites:**
 1. Install dependencies: `uv sync`
 2. Get AWS credentials: `assume`
-3. Select AWS profile (e.g., `aad-mlops-prod-digitalassistantdo`)
+3. Select AWS profile (e.g., `your-aws-profile`)
 
 **Start Server:**
 ```bash
 # Option 1: Using Makefile (recommended)
-make prod  # or: make qa
+make run
 
 # Option 2: Manual
-source setup_mcp_env.sh prod
+source setup_mcp_env.sh
 uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8888
 ```
 
@@ -1145,7 +1119,7 @@ spec:
         - name: MCP_ENVIRONMENT
           value: "prod"
         - name: MCP_INGRESS_URL
-          value: "https://grainger-mcp-servers.svc.ue2.prod.mlops.prod.aws.grainger.com"
+          value: "https://your-mcp-server.example.com"
 ```
 
 **No setup script needed** - secrets are automatically available as environment variables when the pod starts.
@@ -1153,14 +1127,14 @@ spec:
 ### Environment-Specific URLs
 
 **Production:**
-- MCP Server: `https://grainger-mcp-servers.svc.ue2.prod.mlops.prod.aws.grainger.com`
-- AWS Secret: `digitalassistantdomain/prod/mcp-secret`
-- AWS Profile: `aad-mlops-prod-digitalassistantdo`
+- MCP Server: `https://your-mcp-server.example.com`
+- AWS Secret: `your-org/prod/mcp-secret`
+- AWS Profile: `your-aws-profile`
 
 **QA:**
-- MCP Server: `https://grainger-mcp-servers.svc.ue2.qa.mlops.nonprod.aws.grainger.com`
-- AWS Secret: `digitalassistantdomain/qa/mcp-secret`
-- AWS Profile: `aad-mlops-nonprod-digitalassistantdo`
+- MCP Server: `https://your-mcp-server-qa.example.com`
+- AWS Secret: `your-org/qa/mcp-secret`
+- AWS Profile: `your-aws-nonprod-profile`
 
 ---
 
@@ -1179,7 +1153,7 @@ aws sts get-caller-identity
 assume
 
 # 3. Load secrets
-source setup_mcp_env.sh prod
+source setup_mcp_env.sh
 
 # 4. Verify secrets are loaded
 echo $MCP_SECRET_KEY  # Should show value
@@ -1211,7 +1185,7 @@ lsof -ti:8000 | xargs kill -9
 **Symptoms:**
 ```
 Client error '404 Not Found' for url
-'https://grainger-mcp-servers.svc.ue2.prod.mlops.prod.aws.grainger.com/servers/webSearch/call'
+'https://your-mcp-server.example.com/servers/webSearch/call'
 ```
 
 **Solution:**
@@ -1264,7 +1238,7 @@ url = f"{self.base_url}{server_path}/mcp"
   1. MCP_SECRET_KEY matches server's key
   2. System clock is accurate (JWT relies on timestamps)
   3. Token algorithm matches (should be HS256)
-  4. You're connected to Zscaler (required for internal Grainger services)
+  4. You're connected to VPN (required for internal services)
 
 **Debug:**
 ```python
@@ -1360,15 +1334,15 @@ response = await fetch("/api/mcp/query", {
 
 ### Issue: Network connection failures
 
-**Cause:** Not connected to Grainger internal network
+**Cause:** Not connected to internal network
 
 **Solution:**
-1. **Enable Zscaler** (required for accessing internal Grainger services)
+1. **Enable VPN** (required for accessing internal services)
 2. Verify AWS credentials: `aws sts get-caller-identity`
 3. Check VPN connection if working remotely
 4. Test connectivity:
    ```bash
-   curl -s https://grainger-mcp-servers.svc.ue2.prod.mlops.prod.aws.grainger.com/tools/discovery | head -20
+   curl -s https://your-mcp-server.example.com/tools/discovery | head -20
    ```
 
 ### Issue: SSE parsing fails
@@ -1692,6 +1666,6 @@ This guide provides everything needed to implement MCP client integration:
 
 **Reference Implementation:**
 All code is production-tested and available at:
-`/Users/xnxn040/PycharmProjects/voice-seiv-be-interview-prep/`
+`your-project/`
 
 For questions or issues, refer to the test files and original implementation for detailed examples.

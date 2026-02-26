@@ -4,7 +4,7 @@ import '@/styles/globals.css';
 
 export const metadata: Metadata = {
   title: 'Transcript & Summary Streaming',
-  description: 'Production-Lite streaming transcript and LLM summarization system for Grainger',
+  description: 'Production-Lite streaming transcript and LLM summarization system',
 };
 
 export default function RootLayout({

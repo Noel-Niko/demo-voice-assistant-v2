@@ -16,7 +16,7 @@ os.environ.setdefault("OPENAI_API_KEY", "test-key-for-integration-tests")
 os.environ.setdefault("TRANSCRIPT_FILE_PATH", "/tmp/test_transcript.txt")
 
 from app.main import app
-from app.models.database import init_db, get_session_maker
+from app.models.database import create_engine, create_session_maker, init_db
 from app.services.event_bus import InMemoryEventBus
 from app.services.cache import InMemoryCache
 from app.services.transcript_parser import TranscriptParser
@@ -37,14 +37,15 @@ async def test_app():
     - Stateless processes
     """
     # Initialize database (in-memory for tests)
-    await init_db()
+    engine = create_engine()
+    await init_db(engine)
 
     # Create event bus
     event_bus = InMemoryEventBus(queue_size=100)
     await event_bus.start()
 
-    # Get session maker
-    session_maker = get_session_maker()
+    # Create session maker
+    session_maker = create_session_maker(engine)
 
     # Initialize repository (use real implementation - it has in-memory DB)
     repository = ConversationRepository(session_maker)

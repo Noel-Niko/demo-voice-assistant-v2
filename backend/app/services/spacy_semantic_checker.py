@@ -5,7 +5,7 @@ heuristic pattern matching misses (e.g., hanging prepositions, missing
 verb arguments, incomplete noun phrases).
 
 Ported from demo_voice_assistant/src/gateway/semantic_checker.py
-(original design by noel.noisse@grainger.com) with adaptations:
+with adaptations:
 - Imports constants from UtterancePatterns (not demo's UtteranceNLP)
 - Uses structlog instead of stdlib logging
 - Hardcodes disable=["ner", "textcat"] (not configurable)

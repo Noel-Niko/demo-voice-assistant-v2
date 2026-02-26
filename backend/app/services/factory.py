@@ -25,10 +25,10 @@ def create_event_bus() -> EventBus:
         EventBus implementation instance
 
     Example:
-        # .env: REDIS_URL=
+        # REDIS_URL not set
         bus = create_event_bus()  # Returns InMemoryEventBus
 
-        # .env: REDIS_URL=redis://localhost:6379/0
+        # export REDIS_URL=redis://localhost:6379/0
         bus = create_event_bus()  # Returns RedisEventBus
     """
     if settings.REDIS_URL:
@@ -59,10 +59,10 @@ def create_cache() -> Cache:
         Cache implementation instance
 
     Example:
-        # .env: REDIS_URL=
+        # REDIS_URL not set
         cache = create_cache()  # Returns InMemoryCache
 
-        # .env: REDIS_URL=redis://localhost:6379/0
+        # export REDIS_URL=redis://localhost:6379/0
         cache = create_cache()  # Returns RedisCache
     """
     if settings.REDIS_URL:

@@ -11,7 +11,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { parseSummary, ParsedSummary, SummarySection } from '@/utils/summaryParser';
-import { colors, spacing, typography } from '@/styles/grainger-tokens';
+import { colors, spacing, typography } from '@/styles/design-tokens';
 
 interface StructuredSummaryProps {
   summaryText: string;

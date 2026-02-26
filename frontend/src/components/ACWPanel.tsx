@@ -23,7 +23,7 @@ import {
   CRMField,
   ACWState,
 } from '@/types/conversation';
-import { colors, spacing, typography, borderRadius, shadows } from '@/styles/grainger-tokens';
+import { colors, spacing, typography, borderRadius, shadows } from '@/styles/design-tokens';
 
 interface ACWPanelProps {
   /** The final completed summary from the active-call SummaryViewer */

@@ -295,7 +295,7 @@ class TestMCPOrchestratorResultFormatting:
 
 • **SKU 1FYX7** - ANSELL Chemical Resistant Gloves
   Recommended: Nitrile coating provides excellent chemical resistance
-  View: https://www.grainger.com/product/1FYX7"""))])
+  View: https://www.example.com/product/1FYX7"""))])
 
             result = await orchestrator._format_result_for_user(
                 user_query="recommend safety gloves",
@@ -309,14 +309,14 @@ class TestMCPOrchestratorResultFormatting:
             assert mock_openai.call_count == 1
             call_args = mock_openai.call_args
             assert "Product Query Formatting" in call_args.kwargs["messages"][0]["content"]
-            assert "https://www.grainger.com/product/{SKU}" in call_args.kwargs["messages"][0]["content"]
+            assert "https://www.example.com/product/{SKU}" in call_args.kwargs["messages"][0]["content"]
 
             # Verify result is formatted
             assert isinstance(result, dict)
             assert "content" in result
             assert result["content"][0]["type"] == "text"
             assert "SKU 1FYX7" in result["content"][0]["text"]
-            assert "https://www.grainger.com/product/1FYX7" in result["content"][0]["text"]
+            assert "https://www.example.com/product/1FYX7" in result["content"][0]["text"]
 
     @pytest.mark.asyncio
     async def test_format_order_result_with_llm(self, orchestrator):

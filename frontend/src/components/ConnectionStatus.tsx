@@ -5,7 +5,7 @@
  */
 
 import { WebSocketConnectionState } from '@/types/websocket';
-import { colors, spacing, typography, borderRadius } from '@/styles/grainger-tokens';
+import { colors, spacing, typography, borderRadius } from '@/styles/design-tokens';
 
 interface ConnectionStatusProps {
   state: WebSocketConnectionState;

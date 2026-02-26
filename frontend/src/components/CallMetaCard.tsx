@@ -6,7 +6,7 @@
  */
 
 import { CallMeta } from '@/types/conversation';
-import { colors, spacing, typography, borderRadius, shadows } from '@/styles/grainger-tokens';
+import { colors, spacing, typography, borderRadius, shadows } from '@/styles/design-tokens';
 
 interface CallMetaCardProps {
   meta: CallMeta;

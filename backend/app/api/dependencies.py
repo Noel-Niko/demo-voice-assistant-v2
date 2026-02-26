@@ -17,7 +17,6 @@ from app.services.listening_mode_manager import ListeningModeManager
 from app.services.model_manager import ModelManager
 from app.services.data_export_service import DataExportService
 from app.config import settings
-from app.models.database import get_session_maker
 from app.repositories.conversation_repository import ConversationRepository
 
 import structlog
@@ -137,6 +136,22 @@ def get_repository(request: Request) -> ConversationRepository:
     return request.app.state.repository
 
 
+def get_session_maker(request: Request):
+    """Get session maker from app state.
+
+    Args:
+        request: FastAPI request (auto-injected)
+
+    Returns:
+        Async session maker
+
+    Raises:
+        RuntimeError: If session maker not initialized
+    """
+    if not hasattr(request.app.state, "session_maker"):
+        raise RuntimeError("Session maker not initialized. Check lifespan setup.")
+    return request.app.state.session_maker
+
 def get_mcp_client(request: Request) -> MCPClient:
     """Get MCP client from app state.
 
@@ -219,9 +234,7 @@ async def get_mcp_orchestrator(
         error_msg = (
             "OPENAI_API_KEY is required for MCP orchestrator (LLM-driven tool selection).\n\n"
             "To fix this:\n"
-            "1. Local dev: Run 'source setup_env.sh qa' to pull from AWS Secrets Manager\n"
-            "2. Or create .env file with: OPENAI_API_KEY=your-key-here\n"
-            "3. Production: Secrets are auto-loaded from Kubernetes (ArgoCD)\n"
+            "  export OPENAI_API_KEY=sk-your-key-here\n"
         )
         logger.error("openai_api_key_missing_for_mcp")
         raise RuntimeError(error_msg)
@@ -232,36 +245,29 @@ async def get_mcp_orchestrator(
     )
 
 
-# Lazy-initialized ACW service (per original pattern)
-# Note: Still uses one global for lazy initialization since ACW is optional
-_acw_service: ACWService | None = None
-
-
 async def get_acw_service(request: Request) -> ACWService:
     """Get ACW service instance for dependency injection.
 
-    Note: This still uses lazy initialization with global state because
-    ACW service is optional and we don't want to fail at startup.
+    Uses lazy initialization via app.state to avoid startup failures
+    if OPENAI_API_KEY is not available.
 
     Args:
-        request: FastAPI request (auto-injected) for accessing model manager
+        request: FastAPI request (auto-injected) for accessing app state
 
     Returns:
         ACW service singleton
 
     Raises:
-        RuntimeError: If OPENAI_API_KEY not set or ACW service not initialized
+        RuntimeError: If OPENAI_API_KEY not set or ACW service initialization fails
     """
-    global _acw_service
-    if _acw_service is None:
+    # Check if already initialized in app.state
+    if not hasattr(request.app.state, "acw_service") or request.app.state.acw_service is None:
         # Validate OpenAI API key is set
         if not settings.OPENAI_API_KEY:
             error_msg = (
                 "OPENAI_API_KEY is required for ACW service but not set.\n\n"
                 "To fix this:\n"
-                "1. Local dev: Run 'source setup_env.sh qa' to pull from AWS Secrets Manager\n"
-                "2. Or create .env file with: OPENAI_API_KEY=your-key-here\n"
-                "3. Production: Secrets are auto-loaded from Kubernetes (ArgoCD)\n"
+                "  export OPENAI_API_KEY=sk-your-key-here\n"
             )
             logger.error("openai_api_key_missing")
             raise RuntimeError(error_msg)
@@ -270,20 +276,21 @@ async def get_acw_service(request: Request) -> ACWService:
         model_manager = get_model_manager(request)
         preset = model_manager.get_current_preset()
 
-        # Lazy initialization
-        session_maker = get_session_maker()
+        # Lazy initialization and store in app.state
+        session_maker = get_session_maker(request)
         repository = ConversationRepository(session_maker)
-        _acw_service = ACWService(
+        request.app.state.acw_service = ACWService(
             repository=repository,
             openai_api_key=settings.OPENAI_API_KEY,
             model=preset.model_name,  # Use current model, not config default
         )
 
         # Register callback for model changes
-        model_manager.register_callback(_acw_service.set_model)
+        model_manager.register_callback(request.app.state.acw_service.set_model)
 
         logger.info("acw_service_lazy_initialized", model=preset.model_name)
-    return _acw_service
+
+    return request.app.state.acw_service
 
 
 # ============================================================================

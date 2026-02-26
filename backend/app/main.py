@@ -10,7 +10,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.models.database import init_db, close_db, get_session_maker
+from app.models.database import create_engine, create_session_maker, init_db, close_db
 from app.services.factory import create_event_bus, create_cache
 from app.services.transcript_parser import TranscriptParser
 from app.services.transcript_streamer import TranscriptStreamer
@@ -75,7 +75,9 @@ async def lifespan(app: FastAPI):
 
     try:
         # Initialize database
-        await init_db()
+        engine = create_engine()
+        app.state.db_engine = engine
+        await init_db(engine)
         logger.info("database_initialized")
 
         # Create event bus (InMemory or Redis based on REDIS_URL)
@@ -96,7 +98,8 @@ async def lifespan(app: FastAPI):
         )
 
         # Get database session maker
-        session_maker = get_session_maker()
+        session_maker = create_session_maker(engine)
+        app.state.session_maker = session_maker
 
         # Initialize transcript parser
         parser = TranscriptParser(file_path=settings.TRANSCRIPT_FILE_PATH)
@@ -190,24 +193,29 @@ async def lifespan(app: FastAPI):
         )
         logger.info("conversation_manager_initialized")
 
-        # Initialize MCP client (optional - graceful degradation if key missing)
+        # Initialize MCP client (optional - graceful degradation if not configured)
         mcp_client = None
         mcp_token_manager = None
-        if settings.MCP_SECRET_KEY:
+        if settings.MCP_INGRESS_URL:
             try:
-                mcp_token_manager = MCPTokenManager(
-                    secret_key=settings.MCP_SECRET_KEY,
-                    algorithm=settings.MCP_SECRET_ALGORITHM,
-                )
-                mcp_token_manager.start_background_refresh()
-                logger.info("mcp_token_manager_started")
+                # JWT auth is optional — only used if MCP_SECRET_KEY is provided
+                if settings.MCP_SECRET_KEY:
+                    mcp_token_manager = MCPTokenManager(
+                        secret_key=settings.MCP_SECRET_KEY,
+                        algorithm=settings.MCP_SECRET_ALGORITHM,
+                    )
+                    mcp_token_manager.start_background_refresh()
+                    logger.info("mcp_token_manager_started")
 
                 mcp_client = MCPClient(
                     base_url=settings.MCP_INGRESS_URL,
                     token_manager=mcp_token_manager,
                     timeout=settings.MCP_REQUEST_TIMEOUT,
                 )
-                logger.info("mcp_client_initialized")
+                logger.info(
+                    "mcp_client_initialized",
+                    jwt_auth=mcp_token_manager is not None,
+                )
             except Exception as e:
                 logger.warning(
                     "mcp_initialization_failed",
@@ -216,7 +224,7 @@ async def lifespan(app: FastAPI):
                 )
                 # Continue without MCP - graceful degradation
         else:
-            logger.info("mcp_disabled_no_secret_key")
+            logger.info("mcp_disabled_no_ingress_url")
 
         # Initialize listening mode services (if enabled and MCP available)
         opportunity_detector = None
@@ -407,8 +415,9 @@ async def lifespan(app: FastAPI):
             logger.info("cache_closed")
 
         # Close database
-        await close_db()
-        logger.info("database_closed")
+        if hasattr(app.state, "db_engine"):
+            await close_db(app.state.db_engine)
+            logger.info("database_closed")
 
         logger.info("application_shutdown_complete")
 

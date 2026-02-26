@@ -279,7 +279,15 @@
       "Bash(python -c \"\nimport json\nwith open\\(''/tmp/conversation_data_e653e4d7-29cf-465d-aff5-958b8921b0b0_20260223_221432.json''\\) as f:\n    data = json.load\\(f\\)\n\nprint\\(''=== Export Metadata ===''\\)\nprint\\(f\"\"Conversation ID: {data[''export_metadata''][''conversation_id'']}\"\"\\)\nprint\\(f\"\"Exported at: {data[''export_metadata''][''exported_at'']}\"\"\\)\nprint\\(\\)\nprint\\(''=== MCP Queries Metrics ===''\\)\nmcp = data[''metrics''][''mcp_queries'']\nprint\\(f\"\"Manual queries: {mcp[''manual_count'']}\"\"\\)\nprint\\(f\"\"Auto queries: {mcp[''auto_count'']}\"\"\\)\nprint\\(f\"\"Rated up: {mcp[''rated_up'']}\"\"\\)\nprint\\(f\"\"Rated down: {mcp[''rated_down'']}\"\"\\)\nprint\\(\\)\nprint\\(''=== Agent Interactions ===''\\)\nmanual_queries = [i for i in data[''agent_interactions''] if i[''interaction_type''] == ''manual_query'']\nprint\\(f\"\"Total manual_query interactions: {len\\(manual_queries\\)}\"\"\\)\nfor mq in manual_queries:\n    print\\(f\"\"  - Query: ''{mq[''query_text''][:50]}...'' Rating: {mq.get\\(''user_rating'', ''None''\\)}\"\"\\)\n\")",
       "Bash(curl -s http://localhost:8765/api/dashboard/data)",
       "Bash(python -c \"\nimport json\nimport glob\nimport os\n\n# Find all export files\nfiles = sorted\\(glob.glob\\(''/tmp/conversation_data_*.json''\\), key=os.path.getmtime, reverse=True\\)\n\nprint\\(f''Found {len\\(files\\)} export files''\\)\nprint\\(\\)\n\nmanual_total = 0\nrated_total = 0\n\nfor filepath in files[:10]:  # Check last 10\n    try:\n        with open\\(filepath\\) as f:\n            data = json.load\\(f\\)\n        \n        conv_id = data[''export_metadata''][''conversation_id''][:8]\n        manual = data[''metrics''][''mcp_queries''][''manual_count'']\n        rated_up = data[''metrics''][''mcp_queries''][''rated_up'']\n        \n        manual_total += manual\n        rated_total += rated_up\n        \n        if manual > 0 or rated_up > 0:\n            print\\(f''✓ {conv_id}... Manual: {manual}, Rated: {rated_up}''\\)\n    except Exception as e:\n        print\\(f''✗ {os.path.basename\\(filepath\\)}: {e}''\\)\n\nprint\\(\\)\nprint\\(f''TOTALS: Manual queries: {manual_total}, Rated up: {rated_total}''\\)\n\")",
-      "Bash(comm -23 /tmp/source_files.txt /tmp/dest_files.txt)"
+      "Bash(comm -23 /tmp/source_files.txt /tmp/dest_files.txt)",
+      "Bash(find frontend/src -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" \\\\\\) -exec sed -i '' 's/grainger-tokens/design-tokens/g' {} +)",
+      "Bash(uv lock)",
+      "Bash(npx vitest run)",
+      "Bash(uv run pytest -v --tb=short -x)",
+      "Bash(git apply --check ~/Downloads/dependency_update.patch)",
+      "Bash(git apply ~/Downloads/dependency_update.patch)",
+      "Bash(OPENAI_API_KEY=test MCP_INGRESS_URL=test MCP_SECRET_KEY=test make run)",
+      "Bash(MCP_INGRESS_URL=test MCP_SECRET_KEY=test make run)"
     ]
   }
 }

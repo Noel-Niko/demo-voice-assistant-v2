@@ -14,8 +14,7 @@ from app.services.model_manager import ModelManager
 from app.services.acw_service import ACWService
 from app.repositories.conversation_repository import ConversationRepository
 from app.constants import MODEL_PRESETS
-from app.api.dependencies import get_acw_service, _acw_service
-import app.api.dependencies as dependencies_module
+from app.api.dependencies import get_acw_service
 
 
 @pytest.fixture
@@ -51,12 +50,12 @@ async def test_acw_service_uses_model_manager_model(mock_request_with_model_mana
 
     This tests the FIX for the bug where model changes before init were lost.
     """
-    # Reset the global _acw_service to None
-    dependencies_module._acw_service = None
-
     # Create request with gpt-5 selected
     request = mock_request_with_model_manager(model_id="gpt-5")
     preset = MODEL_PRESETS["gpt-5"]
+
+    # Reset app.state.acw_service to None (simulate first call)
+    request.app.state.acw_service = None
 
     # Mock the settings and get_session_maker
     with patch("app.api.dependencies.settings") as mock_settings:
@@ -77,9 +76,6 @@ async def test_acw_service_uses_model_manager_model(mock_request_with_model_mana
                 assert acw_service.model == preset.model_name
                 assert acw_service.model != "gpt-3.5-turbo"
 
-    # Cleanup
-    dependencies_module._acw_service = None
-
 
 @pytest.mark.asyncio
 async def test_acw_service_receives_model_updates_via_callback():
@@ -88,15 +84,13 @@ async def test_acw_service_receives_model_updates_via_callback():
     When ModelManager.set_model() is called after ACWService init, the callback
     should update ACWService's model.
     """
-    # Reset global
-    dependencies_module._acw_service = None
-
     # Create request with initial model
     request = Mock(spec=Request)
     request.app = Mock()
     request.app.state = Mock()
     model_manager = ModelManager(model_id="gpt-3.5-turbo")
     request.app.state.model_manager = model_manager
+    request.app.state.acw_service = None  # Reset to simulate first call
 
     # Initialize ACWService
     with patch("app.api.dependencies.settings") as mock_settings:
@@ -122,9 +116,6 @@ async def test_acw_service_receives_model_updates_via_callback():
                 assert acw_service.model == preset.model_name
                 assert acw_service.model != initial_model
 
-    # Cleanup
-    dependencies_module._acw_service = None
-
 
 @pytest.mark.asyncio
 async def test_model_change_before_acw_init_is_not_lost(mock_request_with_model_manager):
@@ -137,15 +128,13 @@ async def test_model_change_before_acw_init_is_not_lost(mock_request_with_model_
     The fix: get_acw_service() calls get_model_manager(request) and uses its
     current preset instead of settings.OPENAI_MODEL.
     """
-    # Reset global
-    dependencies_module._acw_service = None
-
     # User has changed model to gpt-5 (ModelManager exists with gpt-5)
     request = mock_request_with_model_manager(model_id="gpt-5")
     preset = MODEL_PRESETS["gpt-5"]
 
-    # ACWService has NOT been initialized yet (_acw_service is None)
-    assert dependencies_module._acw_service is None
+    # ACWService has NOT been initialized yet (app.state.acw_service is None)
+    request.app.state.acw_service = None
+    assert request.app.state.acw_service is None
 
     # Now first ACW operation happens - triggers get_acw_service() lazy init
     with patch("app.api.dependencies.settings") as mock_settings:
@@ -167,22 +156,17 @@ async def test_model_change_before_acw_init_is_not_lost(mock_request_with_model_
                 assert acw_service.model != "gpt-3.5-turbo", \
                     "Bug still exists: ACWService ignored ModelManager and used settings default"
 
-    # Cleanup
-    dependencies_module._acw_service = None
-
 
 @pytest.mark.asyncio
 async def test_callback_registration_happens_on_init():
     """Test that get_acw_service() registers callback with ModelManager on init."""
-    # Reset global
-    dependencies_module._acw_service = None
-
     # Create request with ModelManager
     request = Mock(spec=Request)
     request.app = Mock()
     request.app.state = Mock()
     model_manager = ModelManager(model_id="gpt-3.5-turbo")
     request.app.state.model_manager = model_manager
+    request.app.state.acw_service = None  # Reset to simulate first call
 
     # Track callback registrations
     original_register = model_manager.register_callback
@@ -218,6 +202,3 @@ async def test_callback_registration_happens_on_init():
                 # Check it's bound to the acw_service instance
                 assert hasattr(callback, '__self__')
                 assert callback.__self__ == acw_service
-
-    # Cleanup
-    dependencies_module._acw_service = None

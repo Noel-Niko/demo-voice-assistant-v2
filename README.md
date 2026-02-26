@@ -1,7 +1,5 @@
 This repo is a "production-ready" real-time transcript streaming and LLM summarization system for customer service conversations.
-It builds on the initial work done in the [demo_voice_assistant](https://github.com/Noel-Niko/demo_voice_assistant) repo hich includes audio to text transcription not utilized here but portable to this project.
-
-### PRESENTATION:  [noel_nosse_staff_swe_assessment_presentation.pptx](https://github.com/user-attachments/files/25507521/noel_nosse_staff_swe_assessment_presentation.pptx)
+It builds on the initial work done in the [demo_voice_assistant](https://github.com/Noel-Niko/demo_voice_assistant) repo which includes audio to text transcription not utilized here but portable to this project.
 
 _____
 ![transcription](https://github.com/user-attachments/assets/2e2352d0-4955-41c9-a7b6-835e7fb842b1)
@@ -27,30 +25,6 @@ _____
 
 Demonstrates production-ready architecture with event-driven design, async processing, and real-time WebSocket streaming.
 
-## ✅ Assessment Requirements - Complete Verification
-
-| Requirement | Status | How Met | Enhancement |
-|-------------|--------|---------|-------------|
-| **Live-updating transcript (10 lines/5 sec)** | ✅ | Reads `Option2_data_file.txt`, streams via WebSocket | Word-by-word streaming with utterance detection |
-| **LLM-generated summary** | ✅ | OpenAI GPT-3.5-turbo integration | Token streaming + version history |
-| **Summary every 30 seconds** | ✅ | Periodic task with context preservation | Adjustable 5-120s via UI slider |
-| **Summary streaming to browser** | ✅ | WebSocket events: `summary.token` streaming | Typewriter effect + auto-reconnect |
-| **Clear run instructions** | ✅ | README Quick Start section | `make prod` automation + troubleshooting |
-| **Design documentation** | ✅ | Architecture diagrams + implementation details | 15+ ADRs in `ARCHITECTURAL_DECISIONS.md` |
-| **Use shared repository** | ✅ | Complete codebase with git history | Clean commits with feature branches |
-
-### 🚀 Exceeded Requirements
-
-| Additional Feature | Status | Implementation |
-|-------------------|--------|----------------|
-| **Testing Suite** | ✅ | 407 tests (unit, integration, frontend) with 85%+ coverage |
-| **ACW Automation** | ✅ | AI-assisted disposition, compliance checking, CRM extraction |
-| **Metrics Dashboard** | ✅ | Standalone analytics app at `localhost:8766` |
-| **Production Architecture** | ✅ | Event-driven, 12-factor app, AWS Secrets Manager |
-| **Full Audit Trail** | ✅ | Database tracking of all AI interactions and agent edits |
-| **NLP Enhancement** | ✅ | spaCy for utterance boundaries + semantic completeness |
-| **API Documentation** | ✅ | Auto-generated Swagger UI at `/docs` |
-
 ---
 
 ## Table of Contents
@@ -63,6 +37,7 @@ Demonstrates production-ready architecture with event-driven design, async proce
   - [Backend Setup](#backend-setup)
   - [Frontend Setup](#frontend-setup)
   - [Running the Application](#running-the-application)
+- [MCP Integration (Bring Your Own Server)](#mcp-integration-bring-your-own-server)
 - [API Documentation](#api-documentation)
   - [Swagger UI](#swagger-ui)
   - [REST Endpoints](#rest-endpoints)
@@ -84,7 +59,7 @@ Demonstrates production-ready architecture with event-driven design, async proce
 ## Overview
 
 This system simulates a production customer service environment where:
-1. **Transcripts stream in real-time** - Words appear as they're spoken (simulating Genesys Cloud speech-to-text)
+1. **Transcripts stream in real-time** - Words appear as they're spoken (simulating speech-to-text)
 2. **AI generates rolling summaries** - Every 30 seconds, an LLM creates updated summaries with context
 3. **Agents see live updates** - WebSocket pushes updates to the UI instantly
 
@@ -95,24 +70,25 @@ Built with **FastAPI** (backend) and **Next.js** (frontend) following **12-facto
 ## Features
 
 ### Core Capabilities
-- ✅ **Real-time transcript streaming** - Words appear at natural speaking rate (2.5 words/second)
-- ✅ **Word-by-word updates** - Simulates production Genesys interim/final transcription results
-- ✅ **Rolling LLM summaries** - OpenAI GPT-3.5 generates context-aware summaries every 30s
-- ✅ **Typewriter effect** - Summaries stream token-by-token for natural feel
-- ✅ **Version history** - Previous summaries preserved with click-to-expand
-- ✅ **Dynamic pacing** - Adjustable summary frequency (5-120 seconds)
-- ✅ **Event-driven architecture** - Decoupled services via in-memory event bus
-- ✅ **After-Call Work (ACW) automation** - AI-assisted disposition, compliance checking, CRM field extraction
-- ✅ **Phase-driven 3-panel UI** - Clean transitions between active-call and ACW phases
-- ✅ **Full test coverage** - 89 tests (19 repository unit tests, 30 API integration tests, 40 service unit tests)
+- **Real-time transcript streaming** - Words appear at natural speaking rate (2.5 words/second)
+- **Word-by-word updates** - Simulates production interim/final transcription results
+- **Rolling LLM summaries** - OpenAI GPT-3.5 generates context-aware summaries every 30s
+- **Typewriter effect** - Summaries stream token-by-token for natural feel
+- **Version history** - Previous summaries preserved with click-to-expand
+- **Dynamic pacing** - Adjustable summary frequency (5-120 seconds)
+- **Event-driven architecture** - Decoupled services via in-memory event bus
+- **After-Call Work (ACW) automation** - AI-assisted disposition, compliance checking, CRM field extraction
+- **MCP tool augmentation** - Auto-discovers and uses tools from any connected MCP server
+- **Phase-driven 3-panel UI** - Clean transitions between active-call and ACW phases
+- **Full test coverage** - 300+ tests (backend unit/integration + frontend vitest)
 
 ### Technical Highlights
-- ✅ **Async/await throughout** - Non-blocking I/O for high concurrency
-- ✅ **WebSocket auto-reconnect** - Graceful handling of connection issues
-- ✅ **SQLite + aiosqlite** - Async database operations
-- ✅ **Grainger design system** - Production-ready UI components
-- ✅ **12-factor compliant** - Environment-based config, stateless design
-- ✅ **TDD methodology** - Tests written first, high confidence
+- **Async/await throughout** - Non-blocking I/O for high concurrency
+- **WebSocket auto-reconnect** - Graceful handling of connection issues
+- **SQLite + aiosqlite** - Async database operations
+- **Custom design system** - Production-ready UI components with design tokens
+- **12-factor compliant** - Environment-based config, stateless design
+- **TDD methodology** - Tests written first, high confidence
 
 ---
 
@@ -174,12 +150,9 @@ Built with **FastAPI** (backend) and **Next.js** (frontend) following **12-facto
 - Python 3.12+ (check: `python3 --version`)
 - [uv](https://github.com/astral-sh/uv) package manager (install: `curl -LsSf https://astral.sh/uv/install.sh | sh`)
 - Node.js 20+ with npm (check: `node --version`)
-- AWS CLI with Grainger MLOps access¹
-- jq (install: `brew install jq`)
+- An [OpenAI API key](https://platform.openai.com/api-keys)
 
 After these are installed, `uv sync` will handle all Python dependencies automatically.
-
-<sup>¹ New to Grainger MLOps? See [CLI Access Setup](https://grainger.atlassian.net/wiki/spaces/MLOPS/pages/163515400694/3.+CLI+Access) and [Team Onboarding](https://grainger.atlassian.net/wiki/spaces/MLOPS/pages/164573151615/Team+Onboarding) for AWS setup.</sup>
 
 ### Backend Setup
 
@@ -190,7 +163,7 @@ uv sync
 
 **Verify setup:**
 ```bash
-# Run tests (uses mock credentials, no AWS needed)
+# Run tests (uses mock credentials, no API key needed)
 uv run pytest -v
 
 # Expected: 237+ tests passing
@@ -215,33 +188,21 @@ npm install
 ```bash
 cd backend
 
-# Step 1: Get AWS credentials (Digital Assistant Domain team members)
-assume your prod MLOps credentials I.e.:
-assume aad-mlops-prod-digitalassistantdo
+# Set your OpenAI API key
+export OPENAI_API_KEY=sk-your-key-here
 
-# ✅ Verify credentials:
-aws sts get-caller-identity
-# Should show your AWS identity
+# Optional: Connect to an MCP server for tool augmentation
+# export MCP_INGRESS_URL=http://your-mcp-server:8080
 
-# Step 2: Start backend (auto-fetches secrets from AWS Secrets Manager)
-make prod 
-(QA available but not recommended due to data quality)
+# Start the backend
+make run
 ```
 
 **Expected output:**
 ```
-🔐 Loading environment variables for: prod
-🔸 Fetching digitalassistantdomain/prod/openai_key_list...
-✅ Exported: OPENAI_API_KEY
-✅ Exported: MCP_SECRET_KEY
-🔑 Starting server on port 8765...
+Starting server on port 8765...
 INFO:     Uvicorn running on http://0.0.0.0:8765
 ```
-
-**If AWS credentials don't work (not on Digital Assistant Domain team):**
-- `make prod` will prompt you to manually enter API keys
-- Request keys from: **noel.nosse@grainger.com**
-- The server will start after you enter them
 
 Backend runs at: `http://localhost:8765`
 
@@ -297,7 +258,7 @@ Frontend runs at: `http://localhost:3000` for both options
 
 #### Terminal 3 - Metrics Dashboard (Optional)
 
-The metrics dashboard provides analytics across all completed conversations. It is a standalone app that reads JSON export files from `/tmp/`. No AWS credentials required.
+The metrics dashboard provides analytics across all completed conversations. It is a standalone app that reads JSON export files from `/tmp/`. No API keys required.
 
 ```bash
 cd backend
@@ -325,6 +286,43 @@ Data auto-refreshes every 30 seconds.
 | `DASHBOARD_PORT` | `8766` | Dashboard server port |
 | `DASHBOARD_DATA_DIR` | `/tmp` | Directory containing export JSON files |
 | `DASHBOARD_MAIN_APP_URL` | `http://localhost:8765` | Backend URL for "Sync from DB" button |
+
+---
+
+## MCP Integration (Bring Your Own Server)
+
+This system includes a built-in [Model Context Protocol (MCP)](https://modelcontextprotocol.io) client that can connect to **any MCP-compatible server**. It was originally built against an internal MCP server for product and order data — you can substitute your own.
+
+### How It Works
+
+1. **Auto-discovery**: On startup, the system calls the MCP server's `/tools/discovery` endpoint to find all available tool servers
+2. **Schema fetching**: For each server, it fetches tool schemas via `tools/list` (JSON-RPC 2.0)
+3. **Intelligent tool calling**: During conversations, the AI identifies opportunities to query relevant tools and presents suggestions to the agent
+4. **No code changes needed**: Point `MCP_INGRESS_URL` at any MCP server and the system adapts automatically
+
+### Configuration
+
+```bash
+# Set your MCP server URL
+export MCP_INGRESS_URL=http://your-mcp-server:8080
+
+# If your MCP server requires JWT authentication, also set the shared signing secret:
+# The system uses this key to generate HS256 JWT tokens (via MCPTokenManager)
+# with automatic background refresh (24-hour expiry, 3-hour refresh buffer)
+export MCP_SECRET_KEY=your-jwt-signing-secret
+```
+
+### What You'll See
+
+When an MCP server is connected, the "Listening Mode" feature activates:
+- The AI monitors the conversation in real-time
+- When it detects an opportunity to look up information (products, orders, knowledge base), it auto-queries the MCP server
+- Results appear in the **MCP Suggestions** panel on the right side of the UI
+- Agents can also manually trigger queries
+
+### Without MCP
+
+If `MCP_INGRESS_URL` is not set, the system runs without MCP features. All other functionality (transcript streaming, AI summaries, ACW automation) works independently.
 
 ---
 
@@ -381,10 +379,9 @@ Test Files  9 passed (9)
 **Coverage report:** `frontend/coverage/index.html` (open in browser after running `test:coverage`)
 
 **Test Coverage:**
-- ✅ Utilities: summaryParser (fuzzy diff matching)
-- ✅ Hooks: useTranscriptStream, useWebSocket
-- ✅ Components: 7 presentational components (CallerInfoCard, CallMetaCard, ConnectionStatus, InteractionHistory, TranscriptViewer, StructuredSummary)
-- ⚠️ Complex components (ACWPanel, MCPSuggestionsBox, page.tsx) documented in `frontend/CRITICAL_COMPONENTS_ANALYSIS.md`
+- Utilities: summaryParser (fuzzy diff matching)
+- Hooks: useTranscriptStream, useWebSocket
+- Components: 7 presentational components (CallerInfoCard, CallMetaCard, ConnectionStatus, InteractionHistory, TranscriptViewer, StructuredSummary)
 
 **Frontend Coverage Summary (Istanbul):**
 
@@ -396,7 +393,7 @@ Test Files  9 passed (9)
 
 Navigate to: **http://localhost:3000**
 
-**✅ What you should see:**
+**What you should see:**
 1. Empty transcript panel on page load
 2. After 2 seconds, transcript lines start streaming (newest at top)
 3. After 30 seconds, first AI summary generates with typewriter effect
@@ -417,7 +414,7 @@ FastAPI **automatically generates** interactive API documentation:
 
 #### Using Swagger UI
 
-1. Start the backend: `uv run uvicorn app.main:app --host 0.0.0.0 --port 8765`
+1. Start the backend: `make run` (from `backend/`)
 2. Open browser: [`http://localhost:8765/docs`](http://localhost:8765/docs)
 3. Expand any endpoint (e.g., `POST /api/conversations`)
 4. Click "Try it out"
@@ -651,23 +648,24 @@ View coverage report: `backend/htmlcov/index.html`
 
 ### Single Source of Truth
 
-All configuration defaults are defined in **`backend/app/config.py`** (backend) and **hardcoded fallbacks** in frontend code. No `.env` files are used.
+All configuration defaults are defined in **`backend/app/config.py`** (backend) and **hardcoded fallbacks** in frontend code. Run `make help` to see all available options.
 
 ### Environment Variables
 
-#### Backend - AWS Secrets Manager (Production Pattern)
+All secrets and configuration are passed as environment variables (12-factor principle #3). For local development, export them in your terminal before `make run`. In an enterprise deployment, these would be sourced from a secrets manager (e.g., AWS Secrets Manager, HashiCorp Vault) or injected by your orchestration layer (e.g., Kubernetes secrets via ArgoCD).
 
-**Secrets are automatically fetched from AWS Secrets Manager** when you run `make prod` or `make qa`.
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `OPENAI_API_KEY` | Yes | — | OpenAI API key for AI features |
+| `MCP_INGRESS_URL` | No | — | MCP server URL for tool augmentation |
+| `MCP_SECRET_KEY` | No | — | Shared secret used to sign JWT tokens for MCP server auth |
+| `OPENAI_MODEL` | No | `gpt-3.5-turbo` | Initial model (switchable via UI model selector) |
+| `DATABASE_URL` | No | `sqlite` (local) | Database connection string |
+| `REDIS_URL` | No | — | Redis URL for production event bus/cache |
 
-**AWS Secrets Used:**
-- `digitalassistantdomain/prod/openai_key_list` → Exports `OPENAI_API_KEY`
-- `digitalassistantdomain/prod/mcp-secret` → Exports `MCP_SECRET_KEY`
-
-**No .env files required.** If you're not on the Digital Assistant Domain team, `setup_env.sh` will prompt you to manually enter keys.
-
-**Optional runtime overrides** (set in terminal before `make prod`):
+**Optional runtime overrides** (set in terminal before `make run`):
 ```bash
-export OPENAI_MODEL=gpt-4                    # Change model (default: gpt-3.5-turbo)
+export OPENAI_MODEL=gpt-4o                   # Initial model — also switchable via UI dropdown
 export SUMMARY_INTERVAL_SECONDS=60           # Summary frequency (default: 30s)
 export TRANSCRIPT_WORDS_PER_SECOND=3.0       # Speaking rate (default: 2.5)
 # DATABASE_URL auto-configured to backend/transcripts.db (absolute path)
@@ -722,14 +720,14 @@ TRANSCRIPT_WORDS_PER_SECOND=1.5
 
 ### Architecture
 
-The system simulates production **Genesys Cloud** real-time transcription where speech-to-text results arrive **word-by-word**:
+The system simulates production real-time transcription where speech-to-text results arrive **word-by-word**:
 
 ```
 Demo (File-based):
 File → WordStreamer → Interim Updates → Final Update
 
-Production (Genesys):
-Audio → Genesys STT → Interim Updates → Final Update
+Production:
+Audio → STT Service → Interim Updates → Final Update
 ```
 
 ### How It Works
@@ -765,19 +763,19 @@ CREATE INDEX idx_line_id ON transcript_lines(line_id);
 
 **Demo → Production Changes:**
 
-| Aspect | Demo (File) | Production (Genesys) |
+| Aspect | Demo (File) | Production |
 |--------|------------|---------------------|
-| **Input Source** | Static file | Genesys WebSocket |
+| **Input Source** | Static file | STT WebSocket |
 | **Data Format** | Complete lines | Partial results |
 | **Trigger** | File read | Audio stream |
 | **Timing** | Simulated (2.5 wps) | Real-time |
-| **Backend Change** | Replace `TranscriptParser` | Add `GenesysConnector` |
+| **Backend Change** | Replace `TranscriptParser` | Add STT connector |
 | **Frontend Change** | None | Already handles interim/final |
 
 **Key Files to Modify for Production:**
-1. `backend/app/services/transcript_parser.py` → `genesys_connector.py`
-2. `backend/app/services/transcript_streamer.py` → Wire to Genesys events
-3. `backend/app/config.py` → Add `GENESYS_WS_URL`, `GENESYS_API_KEY`
+1. `backend/app/services/transcript_parser.py` → STT connector
+2. `backend/app/services/transcript_streamer.py` → Wire to STT events
+3. `backend/app/config.py` → Add STT service config
 
 ---
 
@@ -806,37 +804,35 @@ CREATE INDEX idx_line_id ON transcript_lines(line_id);
 ### From Demo → Production
 
 **Replace:**
-- ✅ File → Genesys WebSocket
-- ✅ SQLite → PostgreSQL + Redis
-- ✅ In-memory event bus → RabbitMQ/Kafka
-- ✅ Single process → Kubernetes deployment
+- File → STT WebSocket
+- SQLite → PostgreSQL + Redis
+- In-memory event bus → RabbitMQ/Kafka
+- Single process → Kubernetes deployment
 
 **Add:**
-- ✅ Authentication (OAuth2/JWT)
-- ✅ Rate limiting
-- ✅ Monitoring (Prometheus/Grafana)
-- ✅ Logging aggregation (ELK/Datadog)
-- ✅ Secrets management (Vault/AWS Secrets)
-- ✅ Load balancing
-- ✅ Auto-scaling
-- ✅ Database migrations (Alembic)
-
-**See [`DESIGN.md`](./DESIGN.md) for complete production architecture**
+- Authentication (OAuth2/JWT)
+- Rate limiting
+- Monitoring (Prometheus/Grafana)
+- Logging aggregation (ELK/Datadog)
+- Secrets management (Vault/AWS Secrets Manager)
+- Load balancing
+- Auto-scaling
+- Database migrations (Alembic)
 
 ### 12-Factor App Compliance
 
-✅ **Codebase**: Single repo, multiple deployments
-✅ **Dependencies**: Explicitly declared (`pyproject.toml`, `package.json`)
-✅ **Config**: Defaults in code, secrets from environment (Makefile/AWS)
-✅ **Backing services**: Swappable via config
-✅ **Build, release, run**: Separate stages
-✅ **Processes**: Stateless, horizontally scalable
-✅ **Port binding**: Self-contained HTTP/WS
-✅ **Concurrency**: Process-based scaling
-✅ **Disposability**: Fast startup, graceful shutdown
-✅ **Dev/prod parity**: Same backing services
-✅ **Logs**: Event streams to stdout
-✅ **Admin processes**: Same codebase
+- **Codebase**: Single repo, multiple deployments
+- **Dependencies**: Explicitly declared (`pyproject.toml`, `package.json`)
+- **Config**: Defaults in code, secrets from environment variables
+- **Backing services**: Swappable via config
+- **Build, release, run**: Separate stages
+- **Processes**: Stateless, horizontally scalable
+- **Port binding**: Self-contained HTTP/WS
+- **Concurrency**: Process-based scaling
+- **Disposability**: Fast startup, graceful shutdown
+- **Dev/prod parity**: Same backing services
+- **Logs**: Event streams to stdout
+- **Admin processes**: Same codebase
 
 ---
 
@@ -844,48 +840,21 @@ CREATE INDEX idx_line_id ON transcript_lines(line_id);
 
 ### Backend Won't Start
 
-**Error**: `assume: command not found`
+**Error**: `OPENAI_API_KEY is not set`
 ```bash
-# Solution: Install AWS CLI and MLOps tooling
-# See Prerequisites footnote or https://grainger.atlassian.net/wiki/spaces/MLOPS/pages/163515400694/3.+CLI+Access
-```
+# Solution: Set your API key before running
+export OPENAI_API_KEY=sk-your-key-here
+make run
 
-**Error**: `No valid AWS credentials found!`
-```bash
-# Solution 1: Run assume command
-assume aad-mlops-prod-digitalassistantdo
-aws sts get-caller-identity  # Verify it worked
-
-# Then restart
-make prod
-
-# Solution 2: Not on Digital Assistant Domain team?
-# Just run make prod anyway - it will prompt for manual key entry
-# Request keys from: noel.nosse@grainger.com
-```
-
-**Error**: `Could not fetch AWS secret: digitalassistantdomain/prod/openai_key_list`
-```bash
-# This is expected if you're not on the Digital Assistant Domain team
-# setup_env.sh will prompt you to enter keys manually
-# Request keys from: noel.nosse@grainger.com
+# For tests (no API key needed):
+uv run pytest -v
 ```
 
 **Error**: `Port 8765 already in use`
 ```bash
 # Solution: Kill existing process
 kill -9 $(lsof -ti :8765)
-make prod
-```
-
-**Error**: `OPENAI_API_KEY not set`
-```bash
-# Solution: Always use make prod (not direct uvicorn)
-cd backend
-make prod  # This handles secret fetching
-
-# For tests (no AWS needed):
-uv run pytest -v
+make run
 ```
 
 **Error**: `ModuleNotFoundError: No module named 'app'`
@@ -893,7 +862,7 @@ uv run pytest -v
 # Solution: Ensure you're in backend/ directory and dependencies are installed
 cd backend
 uv sync
-make prod
+make run
 ```
 
 ### Frontend Issues
@@ -909,11 +878,6 @@ make prod
 ```bash
 # Solution: Ensure backend is running on correct port
 curl http://localhost:8765/api/health
-```
-
-**Error**: "Fixinator" or browser extension errors
-```bash
-# Solution: Disable extensions or use incognito mode
 ```
 
 ### Summary Not Generating

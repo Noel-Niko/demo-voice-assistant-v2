@@ -23,20 +23,20 @@ logger = structlog.get_logger(__name__)
 
 
 class MCPClient:
-    """MCP client for communicating with grainger-mcp-servers using JSON-RPC 2.0."""
+    """MCP client for communicating with MCP servers using JSON-RPC 2.0."""
 
     def __init__(
         self,
         base_url: str,
-        token_manager: MCPTokenManager,
+        token_manager: MCPTokenManager | None = None,
         timeout: float = 90.0,
     ):
         """Initialize MCP client with connection pooling.
 
         Args:
             base_url: MCP server base URL
-            token_manager: Token manager for JWT authentication
-            timeout: Request timeout in seconds (default: 90, increased for Databricks)
+            token_manager: Optional token manager for JWT authentication
+            timeout: Request timeout in seconds (default: 90)
         """
         self.base_url = base_url.rstrip("/")
         self.token_manager = token_manager
@@ -224,8 +224,8 @@ class MCPClient:
             return result
 
         except httpx.HTTPStatusError as e:
-            # Auto-retry once on 401 (expired token)
-            if e.response.status_code == 401 and retry_count == 0:
+            # Auto-retry once on 401 (expired token) if using JWT auth
+            if e.response.status_code == 401 and retry_count == 0 and self.token_manager:
                 logger.warning(
                     "mcp_token_expired_retrying",
                     server_path=server_path,
@@ -272,12 +272,13 @@ class MCPClient:
             httpx.HTTPStatusError: If request fails
         """
         try:
-            # Build headers with JWT auth
+            # Build headers (JWT auth is optional)
             request_headers = {
-                "Authorization": f"Bearer {self.token_manager.get_valid_token()}",
                 "Content-Type": "application/json",
                 "Accept": "application/json,text/event-stream",  # MCP requires both
             }
+            if self.token_manager:
+                request_headers["Authorization"] = f"Bearer {self.token_manager.get_valid_token()}"
             if headers:
                 request_headers.update(headers)
 

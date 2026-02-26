@@ -6,7 +6,7 @@ Next.js frontend application for real-time transcript streaming and AI-powered s
 
 - **Real-time Transcript Streaming** - WebSocket-based live transcript display
 - **AI Summary Generation** - Token-by-token streaming with typewriter effect
-- **Grainger Design System** - Brand-compliant UI using design tokens
+- **Custom Design System** - UI using design tokens
 - **Auto-Reconnection** - Resilient WebSocket with exponential backoff
 - **Responsive Layout** - Two-panel desktop, stacked mobile
 - **12-Factor Compliant** - Config from environment, stateless frontend
@@ -74,7 +74,7 @@ frontend/
 │   │   ├── conversation.ts    # API response types
 │   │   └── websocket.ts       # WebSocket event types
 │   └── styles/                # Styling
-│       ├── grainger-tokens.ts # Design system tokens
+│       ├── design-tokens.ts  # Design system tokens
 │       └── globals.css        # Global styles
 ├── package.json
 ├── tsconfig.json
@@ -95,8 +95,8 @@ The frontend handles these real-time events:
 
 ## Design Tokens
 
-Uses Grainger brand colors:
-- **Primary Red**: #C8102E (buttons, headers)
+Uses design system colors:
+- **Primary**: #C8102E (buttons, headers)
 - **Agent Blue**: #1B6EC2 (agent messages)
 - **Customer Green**: #0D7C3F (customer messages)
 
@@ -126,12 +126,12 @@ If port 3000 is in use, specify a different port:
 PORT=3001 npm run dev
 ```
 
-## MCP Integration (Coming Soon)
+## MCP Integration
 
-The `MCPSuggestionsBox` component is a placeholder for future MCP server integration:
-- **MCP Server**: `grainger-mcp-servers.svc.ue2.prod.mlops.prod.aws.grainger.com`
-- **Features**: Product/order suggestions based on conversation context
-- **Status**: Awaiting integration specifications
+The `MCPSuggestionsBox` component connects to any MCP-compatible server for tool augmentation:
+- **Configuration**: Set `MCP_INGRESS_URL` environment variable on the backend
+- **Features**: Auto-discovers tools and provides product/order suggestions based on conversation context
+- **Details**: See the main README's [MCP Integration](../README.md#mcp-integration-bring-your-own-server) section
 
 ## Development Commands
 
@@ -167,4 +167,4 @@ npm run lint
 
 ## License
 
-Proprietary - Grainger Assessment Project
+MIT

@@ -503,6 +503,7 @@ class ListeningModeStatusResponse(BaseModel):
     """Response schema for listening mode session status.
 
     Attributes:
+        available: Whether listening mode feature is configured (MCP connected)
         is_active: Whether listening mode is currently active
         session_id: Database ID of the session (None if not active)
         conversation_id: Conversation UUID
@@ -513,6 +514,7 @@ class ListeningModeStatusResponse(BaseModel):
         elapsed_seconds: Session elapsed time in seconds (None if not active)
     """
 
+    available: bool
     is_active: bool
     session_id: int | None
     conversation_id: str

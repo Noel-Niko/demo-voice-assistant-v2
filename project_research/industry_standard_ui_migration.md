@@ -147,7 +147,7 @@ A single "Save & Complete" button at the bottom that commits everything simultan
 
 **`page.tsx`** — Change `gridTemplateColumns: '1fr 1fr'` to `gridTemplateColumns: '240px 1fr 340px'`. Add state for `callPhase: 'pre-call' | 'active' | 'acw' | 'complete'` to control which panels and overlays are visible. Add customer data state.
 
-**`grainger-tokens.ts`** — Add tokens for the new ACW panel colors (the timer color coding: green < 60s, yellow 60-90s, red > 90s), tab active/inactive states, and checklist item states.
+**`design-tokens.ts`** — Add tokens for the new ACW panel colors (the timer color coding: green < 60s, yellow 60-90s, red > 90s), tab active/inactive states, and checklist item states.
 
 **`SummaryViewer.tsx`** — No major changes during the active call phase. But you need a prop or mode switch so that when ACW triggers, the final summary can be passed to the ACW panel in structured format rather than raw streaming text.
 

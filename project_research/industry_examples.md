@@ -117,7 +117,7 @@ The recursive summarization research confirms the pattern works well for long co
 
 **Approach 3: Hybrid — The Recommended Architecture for Your Case**
 
-Amazon LCA actually supports both, and this is what I'd recommend for Grainger. LCA allows the option to call the summarization function during the call, because at any time the transcript can be fetched and a prompt created, even if the call is in progress. This can be useful for when a call is transferred to another agent or escalated to a supervisor.
+Amazon LCA actually supports both, and this is what I'd recommend for an industrial distributor. LCA allows the option to call the summarization function during the call, because at any time the transcript can be fetched and a prompt created, even if the call is in progress. This can be useful for when a call is transferred to another agent or escalated to a supervisor.
 
 The hybrid architecture looks like this:
 
@@ -131,7 +131,7 @@ The hybrid architecture looks like this:
 
 **Why not rolling compaction for our MVP?**
 
-Three practical reasons. First, our typical Grainger customer service call is likely 3-8 minutes — that's maybe 2,000-4,000 tokens of transcript, well within any modern LLM's context window without any compaction needed. Rolling summarization solves a problem you don't have yet. Second, every rolling summarization cycle is an LLM inference call, which means cost multiplied by the number of compaction cycles per call — for a 5-minute call you might run 8-10 inferences instead of 1. Third, the quality risk: if the model drops a specific SKU number or an order ID during an intermediate compaction, it's gone forever because we've discarded the original text. With full-transcript summarization, the model always has access to every word spoken.
+Three practical reasons. First, our typical customer service call is likely 3-8 minutes — that's maybe 2,000-4,000 tokens of transcript, well within any modern LLM's context window without any compaction needed. Rolling summarization solves a problem you don't have yet. Second, every rolling summarization cycle is an LLM inference call, which means cost multiplied by the number of compaction cycles per call — for a 5-minute call you might run 8-10 inferences instead of 1. Third, the quality risk: if the model drops a specific SKU number or an order ID during an intermediate compaction, it's gone forever because we've discarded the original text. With full-transcript summarization, the model always has access to every word spoken.
 
 **When rolling compaction *would* make sense:** If we later expand to multi-session customer journeys (a customer calls back three times about the same issue across days/weeks), compacting older session transcripts into summaries while keeping the current session full is the right pattern. That's the hierarchical architecture that mirrors how human memory actually works, with different systems handling different types of information retention.
 

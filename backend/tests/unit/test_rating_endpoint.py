@@ -17,7 +17,7 @@ import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
 
 from app.main import app
-from app.models.database import get_session_maker, init_db
+from app.models.database import create_engine, create_session_maker, init_db
 from app.repositories.conversation_repository import ConversationRepository
 from app.services.data_export_service import DataExportService
 from app.config import settings
@@ -28,8 +28,9 @@ async def test_app(monkeypatch):
     """Create test app with initialized database."""
     monkeypatch.setattr(settings, "OPENAI_API_KEY", "test-key")
 
-    await init_db()
-    session_maker = get_session_maker()
+    engine = create_engine()
+    await init_db(engine)
+    session_maker = create_session_maker(engine)
     repository = ConversationRepository(session_maker)
     app.state.repository = repository
 

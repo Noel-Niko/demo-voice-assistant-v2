@@ -1,5 +1,5 @@
 [project]
-name = "da-staff-software-engineer-assessment-nn"
+name = "voice-assistant-demo"
 version = "0.1.0"
 description = "Production-Lite streaming transcript and LLM summarization system"
 readme = "README.md"

@@ -32,7 +32,7 @@ import {
   InteractionHistoryItem,
   Summary,
 } from '@/types/conversation';
-import {colors, spacing, typography} from '@/styles/grainger-tokens';
+import {colors, spacing, typography} from '@/styles/design-tokens';
 
 // ── Hardcoded demo data ─────────────────────────────────────────
 // PLACEHOLDER: In production, CallerInfo comes from a screen-pop API

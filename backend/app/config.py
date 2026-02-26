@@ -2,12 +2,11 @@
 
 Configuration follows 12-factor principle #3:
 - Defaults defined in this file
-- Override via environment variables (set by setup_env.sh or Kubernetes)
-- No .env files needed (use make prod/qa with AWS Secrets Manager)
+- Override via environment variables
 
 Usage:
-  make prod  # Loads secrets from AWS Secrets Manager (prod)
-  make qa    # Loads secrets from AWS Secrets Manager (qa)
+  export OPENAI_API_KEY=sk-your-key-here
+  make run
 """
 from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -17,7 +16,6 @@ class Settings(BaseSettings):
     """Application settings with sensible defaults.
 
     All settings can be overridden via environment variables.
-    setup_env.sh loads secrets from AWS Secrets Manager and exports them.
     """
 
     model_config = SettingsConfigDict(
@@ -26,8 +24,6 @@ class Settings(BaseSettings):
     )
 
     # OpenAI Configuration (12-Factor: Config from environment)
-    # Local dev: source setup_env.sh qa (pulls from AWS Secrets Manager)
-    # Production: Loaded from Kubernetes secrets (ArgoCD - see digitalassistantdomain-argo-apps)
     # Optional at import time to allow tests to run without API key
     OPENAI_API_KEY: str | None = None  # Required at runtime for AI features
     OPENAI_MODEL: str = "gpt-3.5-turbo"
@@ -57,13 +53,13 @@ class Settings(BaseSettings):
     TRANSCRIPT_FILE_PATH: str = "../Option2_data_file_v2.txt"
 
     # MCP Configuration (12-Factor: Config from environment)
-    # Local dev: source setup_env.sh prod (pulls from AWS Secrets Manager)
-    # Production: Loaded from Kubernetes secrets (ArgoCD)
-    MCP_SECRET_KEY: str | None = None  # Required at runtime for MCP features
+    # Set MCP_INGRESS_URL to connect to any MCP-compatible server
+    # Set MCP_SECRET_KEY only if your MCP server requires JWT authentication
+    MCP_SECRET_KEY: str | None = None  # Optional: JWT signing key for MCP auth
     MCP_SECRET_ALGORITHM: str = "HS256"  # JWT algorithm
-    MCP_ENVIRONMENT: str = "prod"  # or "qa"
-    MCP_INGRESS_URL: str = "https://grainger-mcp-servers.svc.ue2.prod.mlops.prod.aws.grainger.com"
-    MCP_REQUEST_TIMEOUT: float = 90.0  # Increased for Databricks vector search (can take 45-60s under load)
+    MCP_ENVIRONMENT: str = "prod"
+    MCP_INGRESS_URL: str = ""  # MCP server URL (e.g., http://your-mcp-server:8080)
+    MCP_REQUEST_TIMEOUT: float = 90.0  # Timeout for MCP tool calls
 
     # Utterance Boundary Detection Configuration
     # Timeouts for adaptive utterance finalization (based on confidence and completeness)

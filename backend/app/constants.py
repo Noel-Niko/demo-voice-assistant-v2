@@ -1,7 +1,7 @@
 """Application constants for CRM field extraction and taxonomies.
 
 Following 12-factor config: These are business logic constants (not config).
-Environment-specific values belong in .env files.
+Environment-specific values belong in environment variables.
 """
 from dataclasses import dataclass
 

@@ -12,7 +12,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { TranscriptLine } from '@/types/conversation';
-import { colors, spacing, typography, borderRadius, shadows } from '@/styles/grainger-tokens';
+import { colors, spacing, typography, borderRadius, shadows } from '@/styles/design-tokens';
 
 interface TranscriptViewerProps {
   lines: TranscriptLine[];

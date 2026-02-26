@@ -10,7 +10,7 @@
 
 import { useEffect, useState } from 'react';
 import { ModelConfigResponse } from '@/types/conversation';
-import { colors, spacing, typography } from '@/styles/grainger-tokens';
+import { colors, spacing, typography } from '@/styles/design-tokens';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8765';
 

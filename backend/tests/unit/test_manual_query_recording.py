@@ -10,7 +10,7 @@ from uuid import uuid4
 
 from fastapi.testclient import TestClient
 from app.main import app
-from app.models.database import init_db, get_session_maker
+from app.models.database import create_engine, create_session_maker, init_db
 from app.repositories.conversation_repository import ConversationRepository
 from app.config import settings
 
@@ -21,8 +21,9 @@ async def test_app(monkeypatch):
     # Set required environment variables
     monkeypatch.setattr(settings, "OPENAI_API_KEY", "test-key")
 
-    await init_db()
-    session_maker = get_session_maker()
+    engine = create_engine()
+    await init_db(engine)
+    session_maker = create_session_maker(engine)
     repository = ConversationRepository(session_maker)
     app.state.repository = repository
 

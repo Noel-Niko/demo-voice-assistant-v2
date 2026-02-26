@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 
 /* ═══════════════════════════════════════════════════════════════════
-   Grainger Agent Desktop — After-Call Work (ACW) Summary Panel
+   Agent Desktop — After-Call Work (ACW) Summary Panel
    Full-featured post-interaction wrap-up with AI-generated insights,
    editable fields, CRM auto-fill, disposition codes, and agent QA.
    
    Based on Genesys Agent Copilot, Five9 AI Summaries, Talkdesk Copilot,
    and Salesforce Service Cloud ACW patterns.
    
-   Palette: Grainger Red #C8102E · Charcoal #333 · White/Gray body
+   Palette: Primary Red #C8102E · Charcoal #333 · White/Gray body
    ═══════════════════════════════════════════════════════════════════ */
 
 // ── Design Tokens ────────────────────────────────────────────────
