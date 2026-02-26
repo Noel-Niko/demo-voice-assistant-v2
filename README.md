@@ -3,7 +3,7 @@ It builds on the initial work done in the [demo_voice_assistant](https://github.
 [Voice-Customer-Service-Intelligence-System.pptx](https://github.com/user-attachments/files/25588862/Voice-Customer-Service-Intelligence-System.pptx)
 
 _____
-![ai summary](https://github.com/user-attachments/assets/1ed508e3-6076-4594-b735-58ee3decf6a2)
+![summary](https://github.com/user-attachments/assets/6dcb3ae0-6fae-408d-8c30-c99994a4f173)
 
 _____
 ![Auto_and_Manual_Suggestions](https://github.com/user-attachments/assets/f518019d-d46e-48b1-8929-3fb5eb6d3f78)
@@ -13,7 +13,6 @@ _____
 
 _____
 ![dashboard_89a](https://github.com/user-attachments/assets/ff4ae04e-229d-4fe0-8ca9-b92961a40bee)
-
 
 _____
 
