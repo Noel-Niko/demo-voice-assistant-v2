@@ -1,7 +1,7 @@
 This repo is a "production-ready" real-time transcript streaming and LLM summarization system for customer service conversations.
 It builds on the initial work done in the [demo_voice_assistant](https://github.com/Noel-Niko/demo_voice_assistant) repo which includes audio to text transcription not utilized here but portable to this project.
-[Noel-Nosse-Voice-Customer-Service-Intelligence-System.pptx](https://github.com/user-attachments/files/25589788/Noel-Nosse-Voice-Customer-Service-Intelligence-System.pptx)
 
+[Noel-Nosse-Voice-Customer-Service-Intelligence-System.pptx](https://github.com/user-attachments/files/25589797/Noel-Nosse-Voice-Customer-Service-Intelligence-System.pptx)
 
 <img width="1926" height="778" alt="image" src="https://github.com/user-attachments/assets/ae434b8b-0aeb-4720-946b-ee14f7e99d0d" />
 
