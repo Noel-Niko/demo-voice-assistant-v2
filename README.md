@@ -3,7 +3,8 @@ It builds on the initial work done in the [demo_voice_assistant](https://github.
 
 [Noel-Nosse-Voice-Customer-Service-Intelligence-System.pptx](https://github.com/user-attachments/files/25589797/Noel-Nosse-Voice-Customer-Service-Intelligence-System.pptx)
 
-<img width="1926" height="778" alt="image" src="https://github.com/user-attachments/assets/ae434b8b-0aeb-4720-946b-ee14f7e99d0d" />
+<img width="2278" height="914" alt="image" src="https://github.com/user-attachments/assets/34b28f08-71f3-4e33-a8fd-c484286803ee" />
+
 
 
 _____
