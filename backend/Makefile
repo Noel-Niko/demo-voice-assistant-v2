@@ -11,25 +11,37 @@ help:
 	@echo "  make test-watch      - Run tests in watch mode"
 	@echo "  make dashboard       - Start metrics dashboard (port 8766)"
 	@echo ""
+	@echo "Configuration:"
+	@echo "  Use .env file for convenient configuration:"
+	@echo "    1. cp ../../../.env.example ../.env"
+	@echo "    2. Edit ../.env with your values"
+	@echo "    3. make run (auto-loads .env)"
+	@echo ""
 	@echo "Required environment variables:"
 	@echo "  OPENAI_API_KEY       - Your OpenAI API key (for AI features)"
 	@echo ""
 	@echo "MCP environment variables (for listening mode & tool augmentation):"
 	@echo "  MCP_INGRESS_URL      - MCP server URL (e.g. http://your-mcp-server:8080)"
 	@echo "  MCP_SECRET_KEY       - Shared secret used to sign JWT tokens for MCP auth"
+	@echo "  MCP_DISCOVERY_ENDPOINT - Discovery endpoint path or URL (default: /tools/discovery)"
 	@echo ""
 	@echo "Optional environment variables:"
 	@echo "  OPENAI_MODEL         - Initial model, switchable via UI (default: gpt-3.5-turbo)"
+	@echo "  See ../.env.example for all configuration options"
 	@echo ""
 	@echo "Quick start:"
-	@echo "  export OPENAI_API_KEY=sk-your-key-here"
-	@echo "  export MCP_INGRESS_URL=http://your-mcp-server:8080"
-	@echo "  export MCP_SECRET_KEY=your-jwt-signing-secret"
+	@echo "  cp ../../../.env.example ../.env && vim ../.env"
 	@echo "  make run"
 
 # Run the backend server — prompts for any missing environment variables
 # Single shell block so exported values propagate to uvicorn
 run:
+	@echo ""
+	@echo "=== Voice Assistant Backend ==="
+	@echo ""
+	@echo "Note: If .env file exists at repo root, it will be auto-loaded."
+	@echo "      Environment variables in your shell take precedence over .env."
+	@echo ""
 	@check_var() { \
 		var_name="$$1"; desc="$$2"; skip_msg="$$3"; \
 		eval val="\$$$$var_name"; \
@@ -46,7 +58,6 @@ run:
 			echo ""; \
 		fi; \
 	}; \
-	echo ""; \
 	echo "=== Environment Check ==="; \
 	echo ""; \
 	check_var OPENAI_API_KEY \

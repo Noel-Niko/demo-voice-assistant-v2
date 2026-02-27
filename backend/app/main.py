@@ -6,8 +6,13 @@ Initializes all services and configures middleware.
 import asyncio
 from contextlib import asynccontextmanager
 
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+# Load .env file BEFORE importing config
+# override=False ensures environment variables take precedence (12-factor principle #3)
+load_dotenv(override=False)
 
 from app.config import settings
 from app.models.database import create_engine, create_session_maker, init_db, close_db
@@ -211,6 +216,7 @@ async def lifespan(app: FastAPI):
                     base_url=settings.MCP_INGRESS_URL,
                     token_manager=mcp_token_manager,
                     timeout=settings.MCP_REQUEST_TIMEOUT,
+                    discovery_endpoint=settings.MCP_DISCOVERY_ENDPOINT,
                 )
                 logger.info(
                     "mcp_client_initialized",

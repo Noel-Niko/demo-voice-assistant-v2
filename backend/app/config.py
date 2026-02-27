@@ -60,6 +60,7 @@ class Settings(BaseSettings):
     MCP_ENVIRONMENT: str = "prod"
     MCP_INGRESS_URL: str = ""  # MCP server URL (e.g., http://your-mcp-server:8080)
     MCP_REQUEST_TIMEOUT: float = 90.0  # Timeout for MCP tool calls
+    MCP_DISCOVERY_ENDPOINT: str = "/tools/discovery"  # MCP discovery endpoint path or full URL
 
     # Utterance Boundary Detection Configuration
     # Timeouts for adaptive utterance finalization (based on confidence and completeness)

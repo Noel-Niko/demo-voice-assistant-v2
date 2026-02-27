@@ -30,6 +30,7 @@ class MCPClient:
         base_url: str,
         token_manager: MCPTokenManager | None = None,
         timeout: float = 90.0,
+        discovery_endpoint: str = "/tools/discovery",
     ):
         """Initialize MCP client with connection pooling.
 
@@ -37,9 +38,22 @@ class MCPClient:
             base_url: MCP server base URL
             token_manager: Optional token manager for JWT authentication
             timeout: Request timeout in seconds (default: 90)
+            discovery_endpoint: Discovery endpoint path (e.g., "/tools/discovery")
+                              or full URL (e.g., "https://other-server.com/api/discover")
+
+        Raises:
+            ValueError: If discovery_endpoint format is invalid
         """
+        # Validate discovery endpoint format
+        if not discovery_endpoint.startswith(('/', 'http://', 'https://')):
+            raise ValueError(
+                f"Invalid discovery endpoint: {discovery_endpoint}. "
+                f"Must start with '/', 'http://', or 'https://'"
+            )
+
         self.base_url = base_url.rstrip("/")
         self.token_manager = token_manager
+        self.discovery_endpoint = discovery_endpoint
 
         # Connection pooling with retry transport for 503 errors
         limits = httpx.Limits(
@@ -64,11 +78,16 @@ class MCPClient:
         logger.info(
             "mcp_client_initialized",
             base_url=self.base_url,
+            discovery_endpoint=self.discovery_endpoint,
             timeout=timeout,
         )
 
     async def list_servers(self) -> List[Dict[str, Any]]:
         """List all available MCP servers using discovery endpoint.
+
+        Uses self.discovery_endpoint which can be:
+        - Relative path (e.g., "/tools/discovery") - appended to base_url
+        - Absolute URL (e.g., "https://other-server.com/api/discover") - used directly
 
         Returns:
             List of server objects with metadata including:
@@ -81,10 +100,21 @@ class MCPClient:
         Raises:
             httpx.HTTPStatusError: If request fails
         """
-        response = await self._make_request(
-            "GET",
-            f"{self.base_url}/tools/discovery",
-        )
+        # Determine URL based on endpoint type
+        if self.discovery_endpoint.startswith(('http://', 'https://')):
+            # Absolute URL - use directly
+            url = self.discovery_endpoint
+            logger.debug("using_absolute_discovery_url", url=url)
+        else:
+            # Relative path - append to base_url
+            url = f"{self.base_url}{self.discovery_endpoint}"
+            logger.debug(
+                "using_relative_discovery_path",
+                base_url=self.base_url,
+                path=self.discovery_endpoint
+            )
+
+        response = await self._make_request("GET", url)
         return response
 
     async def list_tools_with_schemas(self, server_path: str) -> List[Dict[str, Any]]:

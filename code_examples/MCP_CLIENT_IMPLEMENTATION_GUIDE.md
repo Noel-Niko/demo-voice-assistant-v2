@@ -40,9 +40,21 @@ The MCP server uses a specific URL structure and discovery mechanism:
 
 ### Discovery Endpoint
 ```
-✅ Server Discovery:   GET {base_url}/tools/discovery
+✅ Server Discovery:   GET {base_url}{discovery_endpoint}
+                      Default: /tools/discovery
+                      Configurable via MCP_DISCOVERY_ENDPOINT environment variable
 ❌ NOT:                GET {base_url}/servers
 ```
+
+**Configurable Discovery Endpoint:**
+
+The discovery endpoint is configurable via the `MCP_DISCOVERY_ENDPOINT` environment variable:
+
+- **Relative path** (default): `/tools/discovery` - appended to `base_url`
+- **Custom relative path**: `/custom/api/servers` - appended to `base_url`
+- **Absolute URL**: `https://other-server.com/api/discover` - used directly
+
+This allows flexibility for different MCP server implementations while maintaining backward compatibility with the default `/tools/discovery` endpoint.
 
 **Discovery Response Structure:**
 ```json
@@ -63,21 +75,21 @@ The MCP server uses a specific URL structure and discovery mechanism:
 }
 ```
 
-### Tool Calling URL Format
+### Tool Calling Expected URL Format
 ```
 ✅ CORRECT:   {base_url}{server_path}/mcp
 ❌ WRONG:     {base_url}/servers/{server_path}/call
 ❌ WRONG:     {base_url}/servers/{server_path}/messages
 ```
 
-**IMPORTANT:** Server paths already include the leading slash (e.g., `/product_retrieval`)
+**IMPORTANT:** Server paths expected to already include the leading slash (e.g., `/product_retrieval`)
 
 **Examples:**
 - ✅ `https://your-mcp-server.example.com/product_retrieval/mcp`
 - ✅ `https://your-mcp-server.example.com/semantic_search/mcp`
 - ❌ `https://your-mcp-server.example.com/servers/product_retrieval/call`
 
-### Available Servers (Dynamically Discovered)
+### Example Available Servers (Dynamically Discovered from the passed URL)
 
 **High Priority Servers:**
 - `/product_retrieval` - Aggregated product tools (priority: high)
@@ -94,8 +106,6 @@ The MCP server uses a specific URL structure and discovery mechanism:
 **Order Servers:**
 - `/order` - Order search and retrieval (category: orders)
 
-**Internal Servers:**
-- `/databricks_claude` - Testing server (priority: low)
 
 ### Tool Discovery
 ```
@@ -103,7 +113,7 @@ The MCP server uses a specific URL structure and discovery mechanism:
 Example:         GET {base_url}/product_retrieval/tools
 ```
 
-**Note:** Tools change dynamically and cannot be hardcoded. Always discover tools at runtime.
+**Note:** Tools can change dynamically and are not hardcoded. Always discover tools at runtime.
 
 ---
 
@@ -346,13 +356,17 @@ class MCPClient:
             Discovery data with servers, roles, categories, and counts
 
         Note:
-            - Discovery endpoint: GET {base_url}/tools/discovery
+            - Discovery endpoint: GET {base_url}{discovery_endpoint}
+            - Default discovery_endpoint: /tools/discovery (configurable)
             - Server paths include leading slash (e.g., "/product_retrieval")
         """
-        response = await self._make_request(
-            "GET",
-            f"{self.base_url}/tools/discovery",
-        )
+        # Determine URL based on endpoint type (relative path or absolute URL)
+        if self.discovery_endpoint.startswith(('http://', 'https://')):
+            url = self.discovery_endpoint
+        else:
+            url = f"{self.base_url}{self.discovery_endpoint}"
+
+        response = await self._make_request("GET", url)
         return response
 
     async def list_tools(self, server_path: str) -> List[Dict[str, Any]]:

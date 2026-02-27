@@ -22,7 +22,8 @@ class TestMCPClientToolsList:
         return MCPClient(
             base_url="https://test-mcp.example.com",
             token_manager=token_manager,
-            timeout=30.0
+            timeout=30.0,
+            discovery_endpoint="/tools/discovery"  # Explicit for clarity
         )
 
     @pytest.mark.asyncio
@@ -152,7 +153,8 @@ class TestMCPClientSSEParsing:
         return MCPClient(
             base_url="https://test-mcp.example.com",
             token_manager=token_manager,
-            timeout=30.0
+            timeout=30.0,
+            discovery_endpoint="/tools/discovery"  # Explicit for clarity
         )
 
     def test_parse_sse_single_line(self, mcp_client):
@@ -248,3 +250,113 @@ data: [DONE]
 
         assert isinstance(result, dict)
         assert "content" in result
+
+
+class TestMCPClientDiscoveryEndpoint:
+    """Test MCP Client's configurable discovery endpoint feature."""
+
+    @pytest.fixture
+    def token_manager(self):
+        """Mock token manager."""
+        manager = MagicMock(spec=MCPTokenManager)
+        manager.get_valid_token = MagicMock(return_value="test-token")
+        return manager
+
+    @pytest.mark.asyncio
+    async def test_default_discovery_endpoint(self, token_manager):
+        """Test MCPClient uses default /tools/discovery endpoint when not specified."""
+        client = MCPClient(
+            base_url="https://test-mcp-server.com",
+            token_manager=token_manager,
+        )
+
+        mock_response = [{"name": "default_server", "path": "/default"}]
+
+        with patch.object(client, '_make_request', new_callable=AsyncMock) as mock_request:
+            mock_request.return_value = mock_response
+
+            servers = await client.list_servers()
+
+            assert len(servers) == 1
+
+            # Verify default endpoint was used
+            call_args = mock_request.call_args
+            url = call_args.args[1]
+            assert url == "https://test-mcp-server.com/tools/discovery"
+
+        await client.close()
+
+    @pytest.mark.asyncio
+    async def test_custom_discovery_endpoint_relative_path(self, token_manager):
+        """Test MCPClient uses custom relative discovery endpoint path."""
+        client = MCPClient(
+            base_url="https://test-mcp-server.com",
+            token_manager=token_manager,
+            discovery_endpoint="/custom/discover",
+        )
+
+        mock_response = [{"name": "test_server", "path": "/test"}]
+
+        with patch.object(client, '_make_request', new_callable=AsyncMock) as mock_request:
+            mock_request.return_value = mock_response
+
+            servers = await client.list_servers()
+
+            assert len(servers) == 1
+            assert servers[0]["name"] == "test_server"
+
+            # Verify the correct URL was called (base_url + custom path)
+            call_args = mock_request.call_args
+            url = call_args.args[1]
+            assert url == "https://test-mcp-server.com/custom/discover"
+
+        await client.close()
+
+    @pytest.mark.asyncio
+    async def test_custom_discovery_endpoint_absolute_url(self, token_manager):
+        """Test MCPClient uses absolute URL for discovery endpoint."""
+        client = MCPClient(
+            base_url="https://test-mcp-server.com",  # This should be ignored
+            token_manager=token_manager,
+            discovery_endpoint="https://other-discovery-server.com/api/discover",
+        )
+
+        mock_response = [{"name": "external_server", "path": "/external"}]
+
+        with patch.object(client, '_make_request', new_callable=AsyncMock) as mock_request:
+            mock_request.return_value = mock_response
+
+            servers = await client.list_servers()
+
+            assert len(servers) == 1
+            assert servers[0]["name"] == "external_server"
+
+            # Verify absolute URL was used (not base_url)
+            call_args = mock_request.call_args
+            url = call_args.args[1]
+            assert url == "https://other-discovery-server.com/api/discover"
+
+        await client.close()
+
+    def test_invalid_discovery_endpoint_format(self, token_manager):
+        """Test MCPClient raises ValueError for invalid discovery endpoint format."""
+        with pytest.raises(ValueError, match="Invalid discovery endpoint"):
+            MCPClient(
+                base_url="https://test-mcp-server.com",
+                token_manager=token_manager,
+                discovery_endpoint="invalid-endpoint",  # Missing leading slash or protocol
+            )
+
+    def test_discovery_endpoint_logged_on_init(self, token_manager):
+        """Test that discovery endpoint is logged during initialization."""
+        with patch('app.services.mcp_client.logger') as mock_logger:
+            client = MCPClient(
+                base_url="https://test-mcp-server.com",
+                token_manager=token_manager,
+                discovery_endpoint="/custom/discover",
+            )
+
+            # Verify logger.info was called with discovery_endpoint
+            mock_logger.info.assert_called_once()
+            call_kwargs = mock_logger.info.call_args.kwargs
+            assert call_kwargs["discovery_endpoint"] == "/custom/discover"

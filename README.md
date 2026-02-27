@@ -96,6 +96,98 @@ Built with **FastAPI** (backend) and **Next.js** (frontend) following **12-facto
 
 ---
 
+## MCP Protocol Details
+
+### Communication Protocol
+
+The Voice Assistant uses **Server-Sent Events (SSE)** over HTTP for MCP communication, following the JSON-RPC 2.0 protocol.
+
+#### SSE Response Format
+
+MCP servers return responses using the `text/event-stream` content type:
+
+```
+Content-Type: text/event-stream
+
+data: {"jsonrpc":"2.0","id":"123e4567-e89b-12d3-a456-426614174000","result":{"content":[...]}}
+
+data: [DONE]
+
+```
+
+#### Request/Response Example
+
+**Request** (POST to MCP server):
+```bash
+POST https://your-mcp-server.example.com/product_retrieval/mcp
+Content-Type: application/json
+Accept: application/json,text/event-stream
+Authorization: Bearer <jwt-token>
+
+{
+  "jsonrpc": "2.0",
+  "id": "123e4567-e89b-12d3-a456-426614174000",
+  "method": "tools/call",
+  "params": {
+    "name": "search_products",
+    "arguments": {
+      "query": "power tools"
+    }
+  }
+}
+```
+
+**Response** (SSE stream):
+```
+data: {"jsonrpc":"2.0","id":"123e4567-e89b-12d3-a456-426614174000","result":{"content":[{"type":"text","text":"Found 42 products matching 'power tools'"}]}}
+
+data: [DONE]
+
+```
+
+#### Discovery Endpoint
+
+MCP servers must implement a discovery endpoint that returns available server paths:
+
+**Default**: `GET {base_url}/tools/discovery`
+**Configurable via**: `MCP_DISCOVERY_ENDPOINT` environment variable
+
+**Example Response**:
+```json
+[
+  {
+    "name": "product_retrieval",
+    "path": "/product_retrieval",
+    "roles": ["product_search", "semantic"],
+    "category": "product",
+    "priority": "high"
+  },
+  {
+    "name": "order_management",
+    "path": "/order_management",
+    "roles": ["order_lookup", "order_status"],
+    "category": "orders",
+    "priority": "medium"
+  }
+]
+```
+
+#### Custom Discovery Endpoints
+
+You can configure a custom discovery endpoint:
+
+```bash
+# Relative path (appended to MCP_INGRESS_URL)
+export MCP_DISCOVERY_ENDPOINT=/custom/api/servers
+
+# Absolute URL (used directly)
+export MCP_DISCOVERY_ENDPOINT=https://other-server.com/api/discover
+```
+
+See `backend/app/services/mcp_client.py` for implementation details.
+
+---
+
 ## Architecture
 
 ### System Design
@@ -656,13 +748,48 @@ All configuration defaults are defined in **`backend/app/config.py`** (backend) 
 
 ### Environment Variables
 
-All secrets and configuration are passed as environment variables (12-factor principle #3). For local development, export them in your terminal before `make run`. In an enterprise deployment, these would be sourced from a secrets manager (e.g., AWS Secrets Manager, HashiCorp Vault) or injected by your orchestration layer (e.g., Kubernetes secrets via ArgoCD).
+#### Quick Setup with .env File
+
+For convenient local development, use a `.env` file:
+
+1. Copy the example file:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Edit `.env` with your actual values:
+   ```bash
+   # Required
+   OPENAI_API_KEY=sk-your-actual-key-here
+
+   # Optional (for MCP features)
+   MCP_INGRESS_URL=http://localhost:8080
+   MCP_SECRET_KEY=your-jwt-secret
+   MCP_DISCOVERY_ENDPOINT=/tools/discovery
+   ```
+
+3. Run the backend:
+   ```bash
+   cd backend
+   make run
+   ```
+
+   The `.env` file is automatically loaded via `python-dotenv`.
+
+**Note**: Environment variables set in your shell take precedence over `.env` values (12-factor compliance).
+
+#### Configuration Reference
+
+All secrets and configuration are passed as environment variables (12-factor principle #3). For local development, use the `.env` file approach above or export them in your terminal before `make run`. In an enterprise deployment, these would be sourced from a secrets manager (e.g., AWS Secrets Manager, HashiCorp Vault) or injected by your orchestration layer (e.g., Kubernetes secrets via ArgoCD).
+
+See `.env.example` for all available configuration options with detailed descriptions.
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `OPENAI_API_KEY` | Yes | — | OpenAI API key for AI features |
 | `MCP_INGRESS_URL` | No | — | MCP server URL for tool augmentation |
 | `MCP_SECRET_KEY` | No | — | Shared secret used to sign JWT tokens for MCP server auth |
+| `MCP_DISCOVERY_ENDPOINT` | No | `/tools/discovery` | MCP discovery endpoint path (e.g., `/custom/discover`) or full URL (e.g., `https://other-server.com/api/discover`). Relative paths are appended to `MCP_INGRESS_URL`. |
 | `OPENAI_MODEL` | No | `gpt-3.5-turbo` | Initial model (switchable via UI model selector) |
 | `DATABASE_URL` | No | `sqlite` (local) | Database connection string |
 | `REDIS_URL` | No | — | Redis URL for production event bus/cache |
