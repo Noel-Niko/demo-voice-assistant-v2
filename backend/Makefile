@@ -2,6 +2,12 @@
 
 .PHONY: help run test test-watch dashboard
 
+# Path to .env file (repo root)
+DOTENV_FILE := $(shell \
+	if [ -f ../.env ]; then echo "../.env"; \
+	elif [ -f .env ]; then echo ".env"; \
+	fi)
+
 # Default target
 help:
 	@echo "Voice Assistant Demo - Available commands:"
@@ -13,9 +19,9 @@ help:
 	@echo ""
 	@echo "Configuration:"
 	@echo "  Use .env file for convenient configuration:"
-	@echo "    1. cp ../../../.env.example ../.env"
-	@echo "    2. Edit ../.env with your values"
-	@echo "    3. make run (auto-loads .env)"
+	@echo "    1. cp .env.example .env   (from repo root)"
+	@echo "    2. Edit .env with your values"
+	@echo "    3. cd backend && make run (auto-loads .env)"
 	@echo ""
 	@echo "Required environment variables:"
 	@echo "  OPENAI_API_KEY       - Your OpenAI API key (for AI features)"
@@ -27,22 +33,36 @@ help:
 	@echo ""
 	@echo "Optional environment variables:"
 	@echo "  OPENAI_MODEL         - Initial model, switchable via UI (default: gpt-3.5-turbo)"
-	@echo "  See ../.env.example for all configuration options"
+	@echo "  See .env.example in the repo root for all configuration options"
 	@echo ""
 	@echo "Quick start:"
-	@echo "  cp ../../../.env.example ../.env && vim ../.env"
-	@echo "  make run"
+	@echo "  cp .env.example .env && vim .env"
+	@echo "  cd backend && make run"
 
-# Run the backend server — prompts for any missing environment variables
-# Single shell block so exported values propagate to uvicorn
+# Run the backend server
+# 1. Sources .env file (if found) so check_var sees existing values
+# 2. Prompts for any still-missing variables (user can skip)
+# 3. Starts uvicorn — python-dotenv also loads .env as a fallback
 run:
-	@echo ""
-	@echo "=== Voice Assistant Backend ==="
-	@echo ""
-	@echo "Note: If .env file exists at repo root, it will be auto-loaded."
-	@echo "      Environment variables in your shell take precedence over .env."
-	@echo ""
-	@check_var() { \
+	@load_dotenv() { \
+		if [ -n "$(DOTENV_FILE)" ]; then \
+			echo "Loading .env from $(DOTENV_FILE)"; \
+			while IFS= read -r line || [ -n "$$line" ]; do \
+				line="$${line%%\#*}"; \
+				line="$$(echo "$$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$$//')"; \
+				[ -z "$$line" ] && continue; \
+				key="$${line%%=*}"; \
+				val="$${line#*=}"; \
+				val="$$(echo "$$val" | sed 's/^["'"'"']//;s/["'"'"']$$//')"; \
+				eval current="\$$$$key"; \
+				if [ -z "$$current" ]; then \
+					export $$key="$$val"; \
+				fi; \
+			done < "$(DOTENV_FILE)"; \
+			echo ""; \
+		fi; \
+	}; \
+	check_var() { \
 		var_name="$$1"; desc="$$2"; skip_msg="$$3"; \
 		eval val="\$$$$var_name"; \
 		if [ -z "$$val" ]; then \
@@ -58,6 +78,10 @@ run:
 			echo ""; \
 		fi; \
 	}; \
+	echo ""; \
+	echo "=== Voice Assistant Backend ==="; \
+	echo ""; \
+	load_dotenv; \
 	echo "=== Environment Check ==="; \
 	echo ""; \
 	check_var OPENAI_API_KEY \

@@ -4,8 +4,9 @@ import pytest
 from app.config import Settings
 
 
-def test_mcp_discovery_endpoint_default():
+def test_mcp_discovery_endpoint_default(monkeypatch):
     """Test MCP_DISCOVERY_ENDPOINT has correct default value."""
+    monkeypatch.delenv("MCP_DISCOVERY_ENDPOINT", raising=False)
     settings = Settings()
     assert settings.MCP_DISCOVERY_ENDPOINT == "/tools/discovery"
 
